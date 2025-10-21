@@ -1,23 +1,16 @@
 import mesa
+from mesa.discrete_space import CellAgent
 
-class ParkAgent(mesa.Agent):
-    def __init__(self, model, unique_id):
+class ParkAgent(CellAgent):
+    def __init__(self, model, cell):
         super().__init__(model)
-        self.unique_id = unique_id
+        self.cell = cell
 
     def action(self):
-        print(self.pos)
-        neighbors = self.model.grid.get_neighborhood(
-            self.pos, moore=True, include_center=False
-        )
-        valid_steps = []
-        for pos in neighbors:
-            cell = self.model.grid.get_cell_list_contents([pos])[0]
-            if cell.cell_type == 1:
-                valid_steps.append(pos)
-        if valid_steps:
-            new_pos = self.random.choice(valid_steps)
-            self.model.grid.move_agent(self, new_pos)
+        possible_cells = [c for c in self.cell.neighborhood if c.is_empty and c.sidewalk==True]
+
+        if len(possible_cells) > 0:
+            self.cell = self.model.random.choice(possible_cells)
 
     def step(self):
         self.action()

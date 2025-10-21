@@ -1,25 +1,31 @@
 import mesa
-from mesa.agent import AgentSet
-from mesa.space import MultiGrid
+from mesa.discrete_space import OrthogonalMooreGrid
 
 from environment import TestEnvironment
 from agent import ParkAgent
 
 class ParkModel(mesa.Model):
-    def __init__(self, num_agents, width, height, seed = 42):
+    def __init__(self, num_agents=5, width=50, height=50, seed = 42):
         super().__init__(seed=seed)
         self.num_agents = num_agents
-        self.grid = MultiGrid(width, height, torus=False)
+        self.grid = OrthogonalMooreGrid((width, height), torus=False, random=self.random)
         self.environment = TestEnvironment(width, height)
 
     def setup(self):
-        self.environment.create(self)
+        self.grid.add_property_layer(self.environment.create())
         self.create_agents()
 
     def create_agents(self):
-        for i in range(self.num_agents):
-            agent = ParkAgent(self, f"Agent_{i}")
-            self.grid.place_agent(agent,self.random.choice(self.environment.sidewalk_coords))
+        sidewalk_cells = [
+            cell for cell in self.grid.all_cells.cells
+            if getattr(cell, "sidewalk", False)
+        ]
+
+        ParkAgent.create_agents(
+            model=self,
+            n=self.num_agents,
+            cell=self.random.sample(sidewalk_cells, k=self.num_agents),
+        )
 
 
     def step(self):

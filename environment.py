@@ -1,35 +1,42 @@
 import mesa
-from cell import Cell
-
+from mesa.experimental.cell_space import PropertyLayer
 """
 Class that represents the environment where agents interact
 """
 
-
-class Environment():
+class Environment:
 
     def __init__(self, width, height):
         self.width = width
         self.height = height
 
-    def create(self, model):
+    def create(self):
         pass
 
 class TestEnvironment(Environment):
 
     def __init__(self, width, height):
         super().__init__(width, height)
-        self.sidewalk_coords = None
+        self.sidewalk_coords = []
+        self.sidewalk_layer = None
 
-    def create(self,model):
-        for x in range(self.width):
-            for y in range(self.height):
-                cell_type = 0  # treating 0 as grass
-                cell = Cell(f"Cell_{x}_{y}", model, cell_type)
-                model.grid.place_agent(cell, (x, y))
+    def get_sidewalk_cords(self):
+        for x in range(6, 9):
+            for y in range(3, 21):
+                self.sidewalk_coords.append((x, y))
 
-        self.sidewalk_coords = [(7, y) for y in range(3, 20)] + [(x, 7) for x in range(5, 15)]
+        for y in range(6, 9):
+            for x in range(5, 16):
+                self.sidewalk_coords.append((x, y))
+
+    def create(self):
+        self.get_sidewalk_cords()
+        terrain_layer = PropertyLayer(
+            "sidewalk", (self.width, self.height), default_value=False, dtype=bool
+        )
 
         for x, y in self.sidewalk_coords:
-            cell = model.grid.get_cell_list_contents([(x, y)])[0]
-            cell.cell_type = 1 #treating 1 as sidewalk
+            terrain_layer.data[x, y] = True
+
+        self.sidewalk_layer = terrain_layer
+        return terrain_layer

@@ -1,26 +1,20 @@
-from mesa.visualization.components.portrayal_components import AgentPortrayalStyle
+from matplotlib.colors import ListedColormap
+from mesa.visualization.components.portrayal_components import AgentPortrayalStyle, PropertyLayerStyle
 
-from agent import ParkAgent
+def propertylayer_portrayal(layer):
+    if layer.name == "sidewalk":
+        cmap = ListedColormap(["green", "gray"])
+        return PropertyLayerStyle(
+            colormap=cmap,
+            alpha=1,
+            colorbar=False,
+            vmin=0,
+            vmax=1,
+        )
 
-
-def visualise_agent(agent):
-
-    if isinstance(agent, ParkAgent):
-        color = "blue"
-        size = 10
-        marker="o"
-    else:
-        color = "lightgreen" if agent.cell_type == 0 else "gray"
-        size=100
-        marker="s"
-    x, y = agent.pos
-
-    return AgentPortrayalStyle(
-        color=color,
-        size=size,
-        alpha=1.0,
-        marker=marker,
-        edgecolors="black",
-        x=x + 0.5,
-        y=y + 0.5
-    )
+def agent_portrayal(agent):
+    return {
+        "marker": ">",
+        "color": "blue",
+        "size": 20
+    }
