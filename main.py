@@ -37,10 +37,12 @@ model_params = {
     },
 }
 
-model = ParkModel(3,30,30)
+model = ParkModel(20,100,100)
 model.setup()
 
 def post_process(ax):
+    fig = ax.get_figure()
+    fig.set_size_inches(50,50)
     ax.set_aspect("equal")
     ax.set_xticks([])
     ax.set_yticks([])
@@ -56,5 +58,5 @@ page = SolaraViz(
     model,
     components=[space],
     model_params=model_params,
-    name="Test model",
+    name="Test model"
 )

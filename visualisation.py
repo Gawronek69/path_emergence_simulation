@@ -11,10 +11,19 @@ def propertylayer_portrayal(layer):
             vmin=0,
             vmax=1,
         )
+    elif layer.name == "obstacles":
+        cmap = ListedColormap(["black"])
+        return PropertyLayerStyle(
+            colormap=cmap,
+            alpha=layer.data.astype(float),
+            colorbar=False,
+            vmin=0,
+            vmax=1,
+        )
 
 def agent_portrayal(agent):
     return {
         "marker": ">",
         "color": "blue",
-        "size": 20
+        "size": 40
     }

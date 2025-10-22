@@ -5,14 +5,15 @@ from environment import TestEnvironment
 from agent import ParkAgent
 
 class ParkModel(mesa.Model):
-    def __init__(self, num_agents=5, width=50, height=50, seed = 42):
+    def __init__(self, num_agents=5, width=100, height=100, seed = 42):
         super().__init__(seed=seed)
         self.num_agents = num_agents
         self.grid = OrthogonalMooreGrid((width, height), torus=False, random=self.random)
         self.environment = TestEnvironment(width, height)
 
     def setup(self):
-        self.grid.add_property_layer(self.environment.create())
+        self.grid.add_property_layer(self.environment.create()[0])
+        self.grid.add_property_layer(self.environment.create()[1])
         self.create_agents()
 
     def create_agents(self):

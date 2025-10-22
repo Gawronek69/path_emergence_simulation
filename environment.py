@@ -1,5 +1,6 @@
 import mesa
 from mesa.experimental.cell_space import PropertyLayer
+from utils import images
 """
 Class that represents the environment where agents interact
 """
@@ -19,15 +20,25 @@ class TestEnvironment(Environment):
         super().__init__(width, height)
         self.sidewalk_coords = []
         self.sidewalk_layer = None
+        self.obstacle_coords = []
+        self.obstacle_layer = None
 
     def get_sidewalk_cords(self):
-        for x in range(6, 9):
-            for y in range(3, 21):
-                self.sidewalk_coords.append((x, y))
+        coords = images.get_coordinates("doria_pamphil")
 
-        for y in range(6, 9):
-            for x in range(5, 16):
-                self.sidewalk_coords.append((x, y))
+        for x in range(100):
+            for y in range(100):
+                if coords[x, y] == 1:
+                    self.sidewalk_coords.append((x, y))
+
+    def get_obstacles_cords(self):
+        coords = images.get_coordinates("doria_pamphil")
+
+        for x in range(100):
+            for y in range(100):
+                if coords[x, y] == 2:
+                    self.obstacle_coords.append((y, x))
+
 
     def create(self):
         self.get_sidewalk_cords()
@@ -35,8 +46,18 @@ class TestEnvironment(Environment):
             "sidewalk", (self.width, self.height), default_value=False, dtype=bool
         )
 
+        self.get_obstacles_cords()
+        obstacle_layer = PropertyLayer(
+            "obstacles", (self.width, self.height), default_value=False, dtype=bool
+        )
+
         for x, y in self.sidewalk_coords:
             terrain_layer.data[x, y] = True
 
+        for x, y in self.obstacle_coords:
+            obstacle_layer.data[x, y] = True
+
         self.sidewalk_layer = terrain_layer
-        return terrain_layer
+        self.obstacle_layer = obstacle_layer
+
+        return [terrain_layer, obstacle_layer]
