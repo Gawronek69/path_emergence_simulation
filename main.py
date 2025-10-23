@@ -37,21 +37,19 @@ model_params = {
     },
 }
 
-model = ParkModel(20,100,100)
+model = ParkModel(5,100,100)
 model.setup()
 
 def post_process(ax):
     fig = ax.get_figure()
-    fig.set_size_inches(50,50)
-    ax.set_aspect("equal")
-    ax.set_xticks([])
-    ax.set_yticks([])
+    fig.set_size_inches(10,10)
+
 
 space = make_mpl_space_component(
     agent_portrayal=agent_portrayal,
     propertylayer_portrayal=propertylayer_portrayal,
-    post_process=post_process,
     draw_grid=True,
+    post_process=post_process
 )
 
 page = SolaraViz(

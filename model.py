@@ -12,8 +12,9 @@ class ParkModel(mesa.Model):
         self.environment = TestEnvironment(width, height)
 
     def setup(self):
-        self.grid.add_property_layer(self.environment.create()[0])
-        self.grid.add_property_layer(self.environment.create()[1])
+        terrain, obstacles = self.environment.create()
+        self.grid.add_property_layer(terrain)
+        self.grid.add_property_layer(obstacles)
         self.create_agents()
 
     def create_agents(self):

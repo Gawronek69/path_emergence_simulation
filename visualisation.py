@@ -23,7 +23,7 @@ def propertylayer_portrayal(layer):
 
 def agent_portrayal(agent):
     return {
-        "marker": ">",
-        "color": "blue",
-        "size": 40
+        "marker": "o",
+        "color": "red",
+        "size": 500
     }
