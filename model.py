@@ -1,5 +1,5 @@
 import mesa
-from mesa.discrete_space import OrthogonalMooreGrid
+from mesa.discrete_space import OrthogonalMooreGrid, CellAgent
 
 from environment import TestEnvironment
 from agent import ParkAgent
@@ -31,6 +31,7 @@ class ParkModel(mesa.Model):
             model=self,
             n=num_agents,
             cell=self.random.sample(self.spawn_cells, k=num_agents),
+            target = self.random.sample(self.spawn_cells, k=num_agents)
         )
 
 
@@ -38,4 +39,15 @@ class ParkModel(mesa.Model):
         self.step_count += 1
         if self.step_count % 10 == 0:
             self.spawn_agents(3)
+
+        del_agents= [agent for agent in self.agents if agent.target == agent.cell]
+        self.remove_agents(del_agents)
+
         self.agents.shuffle_do("step")
+
+    def remove_agents(self, agents: list[CellAgent]) -> None:
+        for agent in agents:
+            self.agents.remove(agent)
+            self.grid[agent.cell.coordinate].remove_agent(agent)
+
+
