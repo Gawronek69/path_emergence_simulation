@@ -6,6 +6,7 @@ from mesa.discrete_space import CellAgent, Cell
 import numpy as np
 from numpy import floating
 
+from utils.terrains import Terrain
 
 
 class ParkAgent(CellAgent):
@@ -19,8 +20,8 @@ class ParkAgent(CellAgent):
 
 
         curr_distance = self.curr_distance()
-
-        possible_cells = [c for c in self.cell.neighborhood if c.is_empty and c.sidewalk==True and curr_distance >= self.calc_dest_dist(c) ]
+        print(self.cell.coordinate, self.cell.SIDEWALK)
+        possible_cells = [c for c in self.cell.neighborhood if c.is_empty and (c.SIDEWALK == Terrain.SIDEWALK.value)]
 
         if len(possible_cells) > 0:
             self.cell = self.model.random.choice(possible_cells)

@@ -1,6 +1,9 @@
 import mesa
 from mesa.experimental.cell_space import PropertyLayer
 from utils import images
+from utils.terrains import Terrain
+import numpy as np
+import sys
 """
 Class that represents the environment where agents interact
 """
@@ -22,42 +25,64 @@ class TestEnvironment(Environment):
         self.sidewalk_layer = None
         self.obstacle_coords = []
         self.obstacle_layer = None
+        self.grass_coords = []
+        self.grass_layer = None
 
     def get_sidewalk_cords(self):
         coords = images.get_coordinates("doria_pamphil")
 
         for x in range(100):
             for y in range(100):
-                if coords[x, y] == 1:
+                if coords[x, y] == Terrain.SIDEWALK.value:
                     self.sidewalk_coords.append((x, y))
+
+    def get_grass_cords(self):
+        coords = images.get_coordinates("doria_pamphil")
+        for x in range(100):
+            for y in range(100):
+                if coords[x, y] == Terrain.GRASS.value:
+                    self.grass_coords.append((x, y))
 
     def get_obstacles_cords(self):
         coords = images.get_coordinates("doria_pamphil")
 
         for x in range(100):
             for y in range(100):
-                if coords[x, y] == 2:
-                    self.obstacle_coords.append((y, x))
+                if coords[x, y] == Terrain.OBSTACLE.value:
+
+                    # Why is there a tuple (y, x) not (x, y)?
+                    self.obstacle_coords.append((x, y))
 
 
-    def create(self):
+    def create(self)-> list[PropertyLayer]:
         self.get_sidewalk_cords()
         terrain_layer = PropertyLayer(
-            "sidewalk", (self.width, self.height), default_value=False, dtype=bool
+            str(Terrain.SIDEWALK), (self.width, self.height), default_value=0, dtype=int
         )
 
         self.get_obstacles_cords()
         obstacle_layer = PropertyLayer(
-            "obstacles", (self.width, self.height), default_value=False, dtype=bool
+            str(Terrain.OBSTACLE), (self.width, self.height), default_value=0, dtype=int
+        )
+
+        self.get_grass_cords()
+        grass_layer = PropertyLayer(
+            str(Terrain.GRASS), (self.width, self.height), default_value=0, dtype=int
         )
 
         for x, y in self.sidewalk_coords:
-            terrain_layer.data[x, y] = True
+            terrain_layer.data[x, y] = Terrain.SIDEWALK.value
 
         for x, y in self.obstacle_coords:
-            obstacle_layer.data[x, y] = True
+            obstacle_layer.data[x, y] = Terrain.OBSTACLE.value
+
+        for x, y in self.grass_coords:
+            grass_layer.data[x, y] = Terrain.GRASS.value
+
+
 
         self.sidewalk_layer = terrain_layer
         self.obstacle_layer = obstacle_layer
+        self.grass_layer = grass_layer
 
-        return [terrain_layer, obstacle_layer]
+        return [terrain_layer, obstacle_layer, grass_layer]

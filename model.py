@@ -15,9 +15,12 @@ class ParkModel(mesa.Model):
         self.spawn_cells = None
 
     def setup(self):
-        terrain, obstacles = self.environment.create()
+        terrain, obstacles, grass = self.environment.create()
         self.grid.add_property_layer(terrain)
+        self.grid.add_property_layer(grass)
         self.grid.add_property_layer(obstacles)
+
+
         self.spawn_cells = [
             cell
             for cell in self.grid.all_cells
