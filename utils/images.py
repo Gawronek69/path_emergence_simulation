@@ -5,6 +5,7 @@ Function used for preprocessing images - creating grid coordinators
 import cv2
 import numpy as np
 from utils.terrains import Terrain
+
 def get_coordinates(image):
     images = {"doria_pamphil": "utils/park_imgs/doria_pamphil.png"}
 
