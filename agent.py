@@ -34,17 +34,17 @@ class ParkAgent(CellAgent):
             best_cell = None
             best_aff = 0
             for candidate, candidate_aff in candidates:
-                #print(candidate, candidate_aff, "CELL TYPE", self.get_tile_value(candidate), "CELL DISTANCE", self.calc_dest_dist(self.cell, candidate) + self.calc_dest_dist(self.target, candidate))
+                # print(candidate, candidate_aff, "CELL TYPE", self.get_tile_value(candidate), "CELL DISTANCE", self.calc_dest_dist(self.cell, candidate) + self.calc_dest_dist(self.target, candidate))
                 if candidate_aff > best_aff:
                     best_aff = candidate_aff
                     best_cell = candidate
             self.subtarget = best_cell
-            #print("CHOSEN CELL", self.subtarget)
+            # print("CHOSEN CELL", self.subtarget)
 
         cell_dist = self.target
 
-        #print("TARGET", self.target)
-        #print("CURRENT CELL", self.cell)
+        # print("TARGET", self.target)
+        # print("CURRENT CELL", self.cell)
 
         if self.subtarget:
             cell_dist = self.subtarget

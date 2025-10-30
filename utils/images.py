@@ -7,7 +7,8 @@ import numpy as np
 from utils.terrains import Terrain
 
 def get_coordinates(image):
-    images = {"doria_pamphil": "utils/park_imgs/doria_pamphil.png"}
+    images = {"doria_pamphil": "utils/park_imgs/doria_pamphil.png",
+              "doria_pamphil_west": "utils/park_imgs/doria_pamphil_west.png"}
 
     try:
         path = images[image]
@@ -29,7 +30,5 @@ def get_coordinates(image):
                 coords[i, j] = Terrain.SIDEWALK.value # value for sidewalk
             else:
                 coords[i, j] = Terrain.OBSTACLE.value # value for obstacles
-
-
 
     return coords.astype('uint8')
