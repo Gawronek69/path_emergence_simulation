@@ -9,7 +9,7 @@ from numpy import floating
 from utils.terrains import Terrain
 
 class ParkAgent(CellAgent):
-    def __init__(self, model, cell:Cell, target: Cell, angle: int = 120, distance: int = 5, tile_weight: float = 1, distance_weight: float = 0.4):
+    def __init__(self, model, cell:Cell, target: Cell, tile_weight: float = 1, distance_weight: float = 0.4, angle: int = 120, distance: int = 5 ):
         super().__init__(model)
         self.cell = cell
         self.target = target
@@ -34,17 +34,17 @@ class ParkAgent(CellAgent):
             best_cell = None
             best_aff = 0
             for candidate, candidate_aff in candidates:
-                print(candidate, candidate_aff, "CELL TYPE", self.get_tile_value(candidate), "CELL DISTANCE", self.calc_dest_dist(self.cell, candidate) + self.calc_dest_dist(self.target, candidate))
+                #print(candidate, candidate_aff, "CELL TYPE", self.get_tile_value(candidate), "CELL DISTANCE", self.calc_dest_dist(self.cell, candidate) + self.calc_dest_dist(self.target, candidate))
                 if candidate_aff > best_aff:
                     best_aff = candidate_aff
                     best_cell = candidate
             self.subtarget = best_cell
-            print("CHOSEN CELL", self.subtarget)
+            #print("CHOSEN CELL", self.subtarget)
 
         cell_dist = self.target
 
-        print("TARGET", self.target)
-        print("CURRENT CELL", self.cell)
+        #print("TARGET", self.target)
+        #print("CURRENT CELL", self.cell)
 
         if self.subtarget:
             cell_dist = self.subtarget

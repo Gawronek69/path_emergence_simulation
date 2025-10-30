@@ -1,9 +1,13 @@
 import mesa
+from mesa import DataCollector
 from mesa.discrete_space import OrthogonalMooreGrid, CellAgent
+
 
 from environment import TestEnvironment
 from agent import ParkAgent
-from utils import entrances
+from utils import entrances, data_collecting
+from utils.data_collecting import gather_steps
+
 
 class ParkModel(mesa.Model):
     def __init__(self, num_agents=5, width=100, height=100, seed = 42):
@@ -13,6 +17,10 @@ class ParkModel(mesa.Model):
         self.environment = TestEnvironment(width, height)
         self.step_count = 0
         self.spawn_cells = None
+        self.data_collector = DataCollector(
+            model_reporters={"Steps": gather_steps}
+        )
+
 
     def setup(self):
         terrain, obstacles, grass = self.environment.create()
@@ -39,6 +47,7 @@ class ParkModel(mesa.Model):
 
 
     def step(self):
+        self.data_collector.collect(self)
         self.step_count += 1
         if self.step_count % 10 == 0:
             self.spawn_agents(3)

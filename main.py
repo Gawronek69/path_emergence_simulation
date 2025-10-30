@@ -1,5 +1,9 @@
+from matplotlib.figure import Figure
 from mesa.visualization import SolaraViz
+from mesa.visualization.components import make_mpl_plot_component
 from mesa.visualization.components.matplotlib_components import make_mpl_space_component
+
+import solara
 
 from model import ParkModel
 from visualisation import *
@@ -45,6 +49,15 @@ def post_process(ax):
     fig.set_size_inches(10,10)
 
 
+@solara.component
+def HeatMap(model):
+    print("HeatMap", type(model))
+    fig = Figure()
+    ax = fig.subplots()
+    ax.plot([1, 2, 3], [1, 4, 9])
+    return solara.FigureMatplotlib(fig)
+
+
 space = make_mpl_space_component(
     agent_portrayal=agent_portrayal,
     propertylayer_portrayal=propertylayer_portrayal,
@@ -52,9 +65,10 @@ space = make_mpl_space_component(
     post_process=post_process
 )
 
+
 page = SolaraViz(
     model,
-    components=[space],
+    components=[space, HeatMap],
     model_params=model_params,
     name="Test model"
 )
