@@ -40,7 +40,7 @@ class ParkModel(mesa.Model):
 
     def step(self):
         self.step_count += 1
-        if self.step_count % 10 == 0:
+        if self.step_count % 10 == 0 and len(self.agents) <= 15:
             self.spawn_agents(3)
 
         del_agents= [agent for agent in self.agents if agent.target == agent.cell]
