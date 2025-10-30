@@ -29,7 +29,7 @@ class TestEnvironment(Environment):
         self.grass_layer = None
 
     def get_sidewalk_cords(self):
-        coords = images.get_coordinates("doria_pamphil")
+        coords = images.get_coordinates("doria_pamphil_west")
 
         for x in range(100):
             for y in range(100):
@@ -37,14 +37,14 @@ class TestEnvironment(Environment):
                     self.sidewalk_coords.append((x, y))
 
     def get_grass_cords(self):
-        coords = images.get_coordinates("doria_pamphil")
+        coords = images.get_coordinates("doria_pamphil_west")
         for x in range(100):
             for y in range(100):
                 if coords[x, y] == Terrain.GRASS.value:
                     self.grass_coords.append((x, y))
 
     def get_obstacles_cords(self):
-        coords = images.get_coordinates("doria_pamphil")
+        coords = images.get_coordinates("doria_pamphil_west")
 
         for x in range(100):
             for y in range(100):
