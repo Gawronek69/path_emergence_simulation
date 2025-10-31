@@ -49,7 +49,7 @@ class ParkAgent(CellAgent):
         if self.subtarget:
             cell_dist = self.subtarget
 
-        possible_cells = [(c, self.calc_dest_dist(cell_dist, c)) for c in self.cell.neighborhood if c.is_empty and (c.SIDEWALK == Terrain.SIDEWALK.value or c.GRASS == Terrain.GRASS.value)]
+        possible_cells = [(c, self.calc_dest_dist(cell_dist, c)) for c in self.cell.neighborhood if (c.SIDEWALK == Terrain.SIDEWALK.value or c.GRASS == Terrain.GRASS.value)]
 
         max_dist = self.curr_distance()
         cell_to_chose = None
@@ -115,7 +115,7 @@ class ParkAgent(CellAgent):
 
     def return_cell_affordance(self, cell: Cell) -> float:
 
-        tile_val = self.tile_weight * (ParkAgent.get_tile_value(cell) - 1)
+        tile_val = self.tile_weight * ParkAgent.get_tile_value(cell)
 
         distance_diff = ParkAgent.calc_dest_dist(cell, self.cell) + ParkAgent.calc_dest_dist(self.target,
                                                                                              cell) - self.curr_distance()
