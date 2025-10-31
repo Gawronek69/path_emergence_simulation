@@ -25,28 +25,22 @@ def propertylayer_portrayal(layer: PropertyLayer) -> PropertyLayerStyle|None:
             alpha=(np.transpose(layer.data) == Terrain.OBSTACLE.value).astype(float), # I hate the people who thought of having
             # to transpose alpha to match the grid actual values
             colorbar=False,
-            vmin=0, # this does not work in mesa probably
-            vmax=1, # this does not work in mesa probably
 
         )
-    elif layer.name == "GRASS":
-        cmap = ListedColormap(["green"])
+    elif layer.name == "GRASS_POPULARITY":
         return PropertyLayerStyle(
-            colormap=cmap,
-            alpha=(np.transpose(layer.data) == Terrain.GRASS.value).astype(float),
-            colorbar=False,
-            vmin=0, # this does not work in mesa probably
-            vmax=2, # this does not work in mesa probably
+            colormap="summer",
+            alpha= (np.transpose(layer.data) >= Terrain.GRASS.value).astype(float),
+            colorbar=True,
+            vmin= Terrain.GRASS.value,
+            #I had to use it to somehow combine popularity layer with grass (to avoid drawing grass on sidewalks)
+            vmax=100,
         )
     elif layer.name == "SIDEWALK":
-        cmap = ListedColormap(["green", "gray"])
         return PropertyLayerStyle(
-            colormap=cmap,
-            #alpha=1,
+            colormap=ListedColormap(["gray"]),
             alpha= (np.transpose(layer.data) == Terrain.SIDEWALK.value).astype(float),
-            colorbar=False,
-            vmin=0, # this does not work in mesa probably
-            vmax=3, # this does not work in mesa probably
+            colorbar=False
         )
 
 

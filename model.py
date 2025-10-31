@@ -4,6 +4,8 @@ from mesa.discrete_space import OrthogonalMooreGrid, CellAgent
 from environment import TestEnvironment
 from agent import ParkAgent
 from utils import entrances
+from utils.terrains import Terrain
+
 
 class ParkModel(mesa.Model):
     def __init__(self, num_agents=5, width=100, height=100, seed = 42):
@@ -15,16 +17,17 @@ class ParkModel(mesa.Model):
         self.spawn_cells = None
 
     def setup(self):
-        terrain, obstacles, grass = self.environment.create()
+        terrain, obstacles, grass, grass_popularity = self.environment.create()
         self.grid.add_property_layer(terrain)
         self.grid.add_property_layer(grass)
         self.grid.add_property_layer(obstacles)
+        self.grid.add_property_layer(grass_popularity)
 
 
         self.spawn_cells = [
             cell
             for cell in self.grid.all_cells
-            if cell.coordinate in entrances.doria_pamphil_west
+            if cell.coordinate in entrances.doria_pamphil
         ]
         self.spawn_agents(3)
 
@@ -45,8 +48,13 @@ class ParkModel(mesa.Model):
 
         del_agents= [agent for agent in self.agents if agent.target == agent.cell]
         self.remove_agents(del_agents)
-
         self.agents.shuffle_do("step")
+        for agent in self.agents:
+            if agent.cell.GRASS == Terrain.GRASS.value:
+                self.grid.GRASS_POPULARITY.data[agent.cell.coordinate] += 10
+
+
+
 
     def remove_agents(self, agents: list[CellAgent]) -> None:
         for agent in agents:

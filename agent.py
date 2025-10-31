@@ -131,4 +131,9 @@ class ParkAgent(CellAgent):
     everything up we get the cell value, without checking the type"""
     @staticmethod
     def get_tile_value(cell: Cell) -> float:
-        return cell.SIDEWALK + cell.GRASS + cell.OBSTACLE
+        #return cell.SIDEWALK + cell.GRASS + cell.OBSTACLE
+        if cell.SIDEWALK == Terrain.SIDEWALK.value:
+            return 100.0
+        elif cell.GRASS == Terrain.GRASS.value:
+            return cell.GRASS_POPULARITY
+        else: return 0.0

@@ -2,8 +2,7 @@ import mesa
 from mesa.experimental.cell_space import PropertyLayer
 from utils import images
 from utils.terrains import Terrain
-import numpy as np
-import sys
+import random
 """
 Class that represents the environment where agents interact
 """
@@ -27,9 +26,10 @@ class TestEnvironment(Environment):
         self.obstacle_layer = None
         self.grass_coords = []
         self.grass_layer = None
+        self.grass_popularity_layer = None
 
     def get_sidewalk_cords(self):
-        coords = images.get_coordinates("doria_pamphil_west")
+        coords = images.get_coordinates("doria_pamphil")
 
         for x in range(100):
             for y in range(100):
@@ -37,14 +37,14 @@ class TestEnvironment(Environment):
                     self.sidewalk_coords.append((x, y))
 
     def get_grass_cords(self):
-        coords = images.get_coordinates("doria_pamphil_west")
+        coords = images.get_coordinates("doria_pamphil")
         for x in range(100):
             for y in range(100):
                 if coords[x, y] == Terrain.GRASS.value:
                     self.grass_coords.append((x, y))
 
     def get_obstacles_cords(self):
-        coords = images.get_coordinates("doria_pamphil_west")
+        coords = images.get_coordinates("doria_pamphil")
 
         for x in range(100):
             for y in range(100):
@@ -70,6 +70,10 @@ class TestEnvironment(Environment):
             str(Terrain.GRASS), (self.width, self.height), default_value=0, dtype=int
         )
 
+        grass_popularity_layer = PropertyLayer(
+            "GRASS_POPULARITY", (self.width, self.height), default_value=0, dtype=int
+        )
+
         for x, y in self.sidewalk_coords:
             terrain_layer.data[x, y] = Terrain.SIDEWALK.value
 
@@ -78,11 +82,13 @@ class TestEnvironment(Environment):
 
         for x, y in self.grass_coords:
             grass_layer.data[x, y] = Terrain.GRASS.value
+            grass_popularity_layer.data[x, y] = Terrain.GRASS.value
 
 
 
         self.sidewalk_layer = terrain_layer
         self.obstacle_layer = obstacle_layer
         self.grass_layer = grass_layer
+        self.grass_popularity_layer = grass_popularity_layer
 
-        return [terrain_layer, obstacle_layer, grass_layer]
+        return [terrain_layer, obstacle_layer, grass_layer, grass_popularity_layer]

@@ -6,8 +6,8 @@ Class used to indicate the type of the terrain - OBSTACLE has to be 0 so it will
 
 class Terrain(Enum):
     OBSTACLE = 1
-    GRASS = 2
-    SIDEWALK = 3
+    GRASS = 3
+    SIDEWALK = 2
 
     def __str__(self):
         return self.name
