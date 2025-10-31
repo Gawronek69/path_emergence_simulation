@@ -1,9 +1,9 @@
 from matplotlib.figure import Figure
 from mesa.visualization import SolaraViz
-from mesa.visualization.components import make_mpl_plot_component
 from mesa.visualization.components.matplotlib_components import make_mpl_space_component
 
 import solara
+import seaborn as sns
 
 from model import ParkModel
 from visualisation import *
@@ -50,11 +50,21 @@ def post_process(ax):
 
 
 @solara.component
-def HeatMap(model):
+def HeatMap(model:ParkModel):
     print("HeatMap", type(model))
-    fig = Figure()
+    fig = Figure(figsize=(20,14), dpi=150)
     ax = fig.subplots()
-    ax.plot([1, 2, 3], [1, 4, 9])
+
+    sns.heatmap(
+        data=model.heatmap,
+        ax=ax,
+        cmap="Oranges",
+        vmin=0,
+        vmax=model.heatmap.max(),
+    )
+
+    ax.set_title(f"Tiles visitation density for step {model.step_count}")
+
     return solara.FigureMatplotlib(fig)
 
 
@@ -68,7 +78,7 @@ space = make_mpl_space_component(
 
 page = SolaraViz(
     model,
-    components=[space, HeatMap],
+    components=[space, (HeatMap, 1)],
     model_params=model_params,
     name="Test model"
 )

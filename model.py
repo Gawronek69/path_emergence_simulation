@@ -7,6 +7,7 @@ from environment import TestEnvironment
 from agent import ParkAgent
 from utils import entrances, data_collecting
 from utils.data_collecting import gather_steps
+import numpy as np
 
 
 class ParkModel(mesa.Model):
@@ -20,6 +21,7 @@ class ParkModel(mesa.Model):
         self.data_collector = DataCollector(
             model_reporters={"Steps": gather_steps}
         )
+        self.heatmap = np.zeros((width, height))
 
 
     def setup(self):
@@ -48,9 +50,12 @@ class ParkModel(mesa.Model):
 
     def step(self):
         self.data_collector.collect(self)
+
+        self.populate_heatmap()
+
         self.step_count += 1
-        if self.step_count % 10 == 0:
-            self.spawn_agents(3)
+        if self.step_count % 7 == 0:
+            self.spawn_agents(4)
 
         del_agents= [agent for agent in self.agents if agent.target == agent.cell]
         self.remove_agents(del_agents)
@@ -62,4 +67,9 @@ class ParkModel(mesa.Model):
             self.agents.remove(agent)
             self.grid[agent.cell.coordinate].remove_agent(agent)
 
+    def populate_heatmap(self):
+        steps = self.data_collector.get_model_vars_dataframe()['Steps'].iloc[self.step_count]
+
+        for (x, y) in steps:
+            self.heatmap[x, y] += 1
 

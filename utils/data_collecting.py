@@ -1,4 +1,4 @@
 
 def gather_steps(model) -> list[tuple[int, int]]:
-    return [agent.pos for agent in model.agents]
+    return [agent.cell.coordinate for agent in model.agents]
 
