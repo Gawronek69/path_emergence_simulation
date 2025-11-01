@@ -9,7 +9,8 @@ from utils.terrains import Terrain
 def get_coordinates(image):
     images = {"doria_pamphil": "utils/park_imgs/doria_pamphil.png",
               "doria_pamphil_west": "utils/park_imgs/doria_pamphil_west.png",
-              "greenwich": "utils/park_imgs/greenwich.png",}
+              "greenwich": "utils/park_imgs/greenwich.png",
+              "blackheath": "utils/park_imgs/blackheath.png",}
 
     try:
         path = images[image]
