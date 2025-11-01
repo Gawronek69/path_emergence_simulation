@@ -11,7 +11,7 @@ import numpy as np
 
 
 class ParkModel(mesa.Model):
-    def __init__(self, num_agents=5, width=100, height=100, seed = 42):
+    def __init__(self, num_agents=5, width=100, height=100, seed = 42, agent_params : dict = None):
         super().__init__(seed=seed)
         self.num_agents = num_agents
         self.grid = OrthogonalMooreGrid((width, height), torus=False, random=self.random)
@@ -22,7 +22,10 @@ class ParkModel(mesa.Model):
             model_reporters={"Steps": gather_steps}
         )
         self.heatmap = np.zeros((width, height))
+        self.agent_params = agent_params
 
+    def __str__(self):
+        return f"Model with params: {self.agent_params} and seed {self._seed}"
 
     def setup(self):
         terrain, obstacles, grass = self.environment.create()
@@ -40,11 +43,16 @@ class ParkModel(mesa.Model):
 
 
     def spawn_agents(self, num_agents):
+        if self.agent_params is None:
+            self.agent_params = {}
+
+
         ParkAgent.create_agents(
             model=self,
             n=num_agents,
             cell=self.random.sample(self.spawn_cells, k=num_agents),
-            target = self.random.sample(self.spawn_cells, k=num_agents)
+            target = self.random.sample(self.spawn_cells, k=num_agents),
+            **self.agent_params
         )
 
 
