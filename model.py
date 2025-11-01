@@ -51,7 +51,7 @@ class ParkModel(mesa.Model):
         self.agents.shuffle_do("step")
         for agent in self.agents:
             if agent.cell.GRASS == Terrain.GRASS.value:
-                self.grid.GRASS_POPULARITY.data[agent.cell.coordinate] += 10
+                self.grid.GRASS_POPULARITY.data[agent.cell.coordinate] += 1
 
 
 

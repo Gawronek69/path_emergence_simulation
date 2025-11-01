@@ -1,3 +1,4 @@
+import math
 from typing import Any
 
 import mesa
@@ -20,50 +21,34 @@ class ParkAgent(CellAgent):
         self.distance_weight = distance_weight # distance_weight value should never be equal to 0
         # else it will not reach the destination in some scenarios
         # cuz it will wiggle around the destination
+        self.previous_cells = []
 
 
     def action(self):
-        """If agent reached the subtarget then we have to find next subtarget"""
-        if self.subtarget and self.subtarget.coordinate == self.cell.coordinate:
-            self.subtarget = None
+        possible_cells = [c for c in self.cell.neighborhood]
+        best_cells_distance = []
+        for cell in possible_cells:
+            distance = ParkAgent.calc_dest_dist(cell,self.target)
+            best_cells_distance.append((cell,distance))
+        top5_cells = sorted(best_cells_distance, key=lambda c: c[1] if (c[0].OBSTACLE != Terrain.OBSTACLE.value) else math.inf)[:5]
+        best_affordance = -math.inf
+        best_cell = None
+        probability = self.random.randint(0,10) >= 9
+        if probability:
+            best_cell = self.random.choice([top5_cells[0][0],top5_cells[1][0]])
+        else:
+            for cell in top5_cells:
+                affordance = self.get_tile_value(cell[0])
+                if affordance > best_affordance and cell[0] not in self.previous_cells:
+                    best_affordance = affordance
+                    best_cell = cell[0]
+        if best_cell:
+            self.cell = best_cell
+            self.previous_cells.append(best_cell)
 
-        """Find which point in the vision arc is best for next destination of the agent"""
-        if self.subtarget is None:
-            candidates = self.select_subtarget()
 
-            best_cell = None
-            best_aff = 0
-            for candidate, candidate_aff in candidates:
-                # print(candidate, candidate_aff, "CELL TYPE", self.get_tile_value(candidate), "CELL DISTANCE", self.calc_dest_dist(self.cell, candidate) + self.calc_dest_dist(self.target, candidate))
-                if candidate_aff > best_aff:
-                    best_aff = candidate_aff
-                    best_cell = candidate
-            self.subtarget = best_cell
-            # print("CHOSEN CELL", self.subtarget)
 
-        cell_dist = self.target
 
-        # print("TARGET", self.target)
-        # print("CURRENT CELL", self.cell)
-
-        if self.subtarget:
-            cell_dist = self.subtarget
-
-        possible_cells = [(c, self.calc_dest_dist(cell_dist, c)) for c in self.cell.neighborhood if (c.SIDEWALK == Terrain.SIDEWALK.value or c.GRASS == Terrain.GRASS.value)]
-
-        max_dist = self.curr_distance()
-        cell_to_chose = None
-
-        for cell, distance in possible_cells:
-            if distance < max_dist:
-                cell_to_chose = cell
-                max_dist = distance
-
-        if cell_to_chose:
-            self.cell = cell_to_chose
-
-        # if len(possible_cells) > 0:
-        #     self.cell = self.model.random.choice(possible_cells)
 
     """ Function that returns the visible tiles by the agent"""
     def select_subtarget(self) -> list[tuple[Cell, float]]:
