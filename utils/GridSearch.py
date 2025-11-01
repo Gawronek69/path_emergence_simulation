@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 
 class GridSearch:
 
-    def __init__(self, directory:str = os.getcwd(), samples:int = 5,   n_workers : int = 1, stop_step:int = 350, distance: int|list[int] = 5, angle:int|list[int] = 90,
+    def __init__(self, directory:str = os.getcwd(), samples:int = 5,   n_workers : int = 1, stop_step:int = 100, distance: int|list[int] = 5, angle:int|list[int] = 90,
                  terrain_weight:float|list[float] = 1, distance_weight:float|list[float] = 0.2):
         self.directory = directory
         self.samples = samples
@@ -74,10 +74,9 @@ class GridSearch:
 
     def _model_task(self, model_params: list[dict], queue: mp.Queue) -> None:
         models_data = []
-        for model_item in model_params:
+        for i, model_item in enumerate(model_params):
             model = ParkModel(agent_params=model_item)
             model.setup()
-            print(model)
             for _ in range(self.stop_step):
                 model.step()
             models_data.append([model_item, model.heatmap])
@@ -104,7 +103,6 @@ class GridSearch:
         for process in processes:
             process.join()
 
-        print("proccesses finished")
 
         final_models = []
 

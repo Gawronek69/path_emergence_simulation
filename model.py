@@ -42,6 +42,8 @@ class ParkModel(mesa.Model):
         self.spawn_agents(3)
 
 
+
+
     def spawn_agents(self, num_agents):
         if self.agent_params is None:
             self.agent_params = {}
@@ -55,6 +57,17 @@ class ParkModel(mesa.Model):
             **self.agent_params
         )
 
+
+
+    @classmethod
+    def create_agents(cls, model, n, cell, target, **agent_kwargs):
+        agents = []
+        for i in range(n):
+            a = cls(model, cell[i], target[i], **agent_kwargs)
+            agents.append(a)
+            model.agents.append(a)
+            model.grid[cell[i]].add_agent(a)
+        return agents
 
     def step(self):
         self.data_collector.collect(self)

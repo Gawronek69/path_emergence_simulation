@@ -9,7 +9,7 @@ from numpy import floating
 from utils.terrains import Terrain
 
 class ParkAgent(CellAgent):
-    def __init__(self, model, cell:Cell, target: Cell, tile_weight: float = 1, distance_weight: float = 0.4, angle: int = 120, distance: int = 5 ):
+    def __init__(self, model, cell:Cell, target: Cell, tile_weight: float = 1, distance_weight: float = 0.1, angle: int = 100, distance: int = 10):
         super().__init__(model)
         self.cell = cell
         self.target = target
@@ -20,6 +20,9 @@ class ParkAgent(CellAgent):
         self.distance_weight = distance_weight # distance_weight value should never be equal to 0
         # else it will not reached the destination in some scenarios
         # cuz it will wiggle around the destination
+
+
+
 
 
     def action(self):
