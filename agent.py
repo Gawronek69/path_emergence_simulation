@@ -9,7 +9,7 @@ from numpy import floating
 from utils.terrains import Terrain
 
 class ParkAgent(CellAgent):
-    def __init__(self, model, cell:Cell, target: Cell, tile_weight: float = 1, distance_weight: float = 0.1, angle: int = 100, distance: int = 10):
+    def __init__(self, model, cell:Cell, target: Cell, tile_weight: float = 1, distance_weight: float = 0.05, angle: int = 120, distance: int = 11):
         super().__init__(model)
         self.cell = cell
         self.target = target
@@ -35,7 +35,7 @@ class ParkAgent(CellAgent):
             candidates = self.select_subtarget()
 
             best_cell = None
-            best_aff = 0
+            best_aff = float('-inf')
             for candidate, candidate_aff in candidates:
                 #print(candidate, candidate_aff, "CELL TYPE", self.get_tile_value(candidate), "CELL DISTANCE", self.calc_dest_dist(self.cell, candidate) + self.calc_dest_dist(self.target, candidate))
                 if candidate_aff > best_aff:
@@ -54,7 +54,7 @@ class ParkAgent(CellAgent):
 
         possible_cells = [(c, self.calc_dest_dist(cell_dist, c)) for c in self.cell.neighborhood if c.is_empty and (c.SIDEWALK == Terrain.SIDEWALK.value or c.GRASS == Terrain.GRASS.value)]
 
-        max_dist = self.curr_distance()
+        max_dist = float('inf')
         cell_to_chose = None
 
         for cell, distance in possible_cells:
@@ -118,13 +118,13 @@ class ParkAgent(CellAgent):
 
     def return_cell_affordance(self, cell: Cell) -> float:
 
-        tile_val = self.tile_weight * (ParkAgent.get_tile_value(cell) - 1)
+        tile_val = self.tile_weight * (ParkAgent.get_tile_value(cell))
 
         distance_diff = ParkAgent.calc_dest_dist(cell, self.cell) + ParkAgent.calc_dest_dist(self.target,
                                                                                              cell) - self.curr_distance()
         distance_val = distance_diff * self.distance_weight
 
-        return min(tile_val - distance_val, 0)
+        return max(tile_val - distance_val, 0)
 
     def curr_distance(self):
         return ParkAgent.calc_dest_dist(self.target, self.cell)

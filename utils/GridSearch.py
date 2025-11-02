@@ -5,6 +5,8 @@ import random
 import seaborn as sns
 import matplotlib.pyplot as plt
 
+"""GridSearch like class for generating many simulataions with different params at once
+use run_models to run the simulations and plot_heatmaps to create the results"""
 class GridSearch:
 
     def __init__(self, directory:str = os.getcwd(), samples:int = 5,   n_workers : int = 1, stop_step:int = 100, distance: int|list[int] = 5, angle:int|list[int] = 90,
