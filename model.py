@@ -27,7 +27,7 @@ class ParkModel(mesa.Model):
         self.spawn_cells = [
             cell
             for cell in self.grid.all_cells
-            if cell.coordinate in entrances.blackheath
+            if cell.coordinate in entrances.hyde
         ]
         self.spawn_agents(3)
 
