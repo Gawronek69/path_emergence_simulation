@@ -1,5 +1,5 @@
 import math
-from typing import Any
+from typing import Any, Tuple, List
 
 import mesa
 from mesa.discrete_space import CellAgent, Cell
@@ -18,10 +18,9 @@ class ParkAgent(CellAgent):
         self.distance = distance
         self.subtarget = None
         self.tile_weight = tile_weight
-        self.distance_weight = distance_weight # distance_weight value should never be equal to 0
-        # else it will not reach the destination in some scenarios
-        # cuz it will wiggle around the destination
-        self.previous_cells = []
+        self.distance_weight = distance_weight
+        self.previous_cell : Cell|None = None
+        self.previous_cells : List[Cell] = []
 
 
     def action(self):
@@ -30,25 +29,37 @@ class ParkAgent(CellAgent):
         for cell in possible_cells:
             distance = ParkAgent.calc_dest_dist(cell,self.target)
             best_cells_distance.append((cell,distance))
-        top5_cells = sorted(best_cells_distance, key=lambda c: c[1] if (c[0].OBSTACLE != Terrain.OBSTACLE.value) else math.inf)[:5]
-        best_affordance = -math.inf
-        best_cell = None
-        probability = self.random.randint(0,10) >= 9
-        if probability:
-            best_cell = self.random.choice([top5_cells[0][0],top5_cells[1][0]])
+        best_cells_distance = sorted(best_cells_distance, key=lambda c: c[1] if (c[0].OBSTACLE != Terrain.OBSTACLE.value) else math.inf)
+        best_cell = best_cells_distance[0]
+        flag = False
+        if best_cell[0].SIDEWALK == Terrain.SIDEWALK.value:
+            self.previous_cell = self.cell
+            self.previous_cells.append(self.cell)
+            self.cell = best_cell[0]
         else:
-            for cell in top5_cells:
-                affordance = self.get_tile_value(cell[0])
-                if affordance > best_affordance and cell[0] not in self.previous_cells:
-                    best_affordance = affordance
-                    best_cell = cell[0]
-        if best_cell:
-            self.cell = best_cell
-            self.previous_cells.append(best_cell)
-
-
-
-
+            for cell in best_cells_distance:
+                if cell[0] in self.previous_cells:
+                    pass
+                if cell[0].GRASS == Terrain.GRASS.value:
+                    possibility = self.random.randint(3,100) <= cell[0].GRASS_POPULARITY
+                    if possibility:
+                        flag = True
+                        self.previous_cell = self.cell
+                        self.previous_cells.append(self.cell)
+                        self.cell = cell[0]
+                        break
+                elif cell[0].SIDEWALK == Terrain.SIDEWALK.value:
+                    if self.previous_cell and cell[1] < ParkAgent.calc_dest_dist(self.previous_cell,self.target):
+                        flag = True
+                        self.previous_cell = self.cell
+                        self.previous_cells.append(self.cell)
+                        self.cell = cell[0]
+                else:
+                    pass
+            if not flag:
+                self.previous_cell = self.cell
+                self.previous_cells.append(self.cell)
+                self.cell = best_cell[0]
 
     """ Function that returns the visible tiles by the agent"""
     def select_subtarget(self) -> list[tuple[Cell, float]]:
