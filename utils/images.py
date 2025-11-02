@@ -34,4 +34,5 @@ def get_coordinates(image):
             else:
                 coords[i, j] = Terrain.OBSTACLE.value # value for obstacles
 
+
     return coords.astype('uint8')

@@ -50,7 +50,6 @@ class TestEnvironment(Environment):
             for y in range(100):
                 if coords[x, y] == Terrain.OBSTACLE.value:
 
-                    # Why is there a tuple (y, x) not (x, y)?
                     self.obstacle_coords.append((x, y))
 
 

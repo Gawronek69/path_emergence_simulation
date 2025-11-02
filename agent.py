@@ -9,6 +9,7 @@ from numpy import floating
 from utils.terrains import Terrain
 
 class ParkAgent(CellAgent):
+
     def __init__(self, model, cell:Cell, target: Cell, angle: int = 120, distance: int = 17, tile_weight: float = 1, distance_weight: float = 0.4):
         super().__init__(model)
         self.cell = cell
@@ -22,6 +23,9 @@ class ParkAgent(CellAgent):
         # cuz it will wiggle around the destination
 
 
+
+
+
     def action(self):
         """If agent reached the subtarget then we have to find next subtarget"""
         if self.subtarget and self.subtarget.coordinate == self.cell.coordinate:
@@ -32,9 +36,8 @@ class ParkAgent(CellAgent):
             candidates = self.select_subtarget()
 
             best_cell = None
-            best_aff = 0
+            best_aff = float('-inf')
             for candidate, candidate_aff in candidates:
-                # print(candidate, candidate_aff, "CELL TYPE", self.get_tile_value(candidate), "CELL DISTANCE", self.calc_dest_dist(self.cell, candidate) + self.calc_dest_dist(self.target, candidate))
                 if candidate_aff > best_aff:
                     best_aff = candidate_aff
                     best_cell = candidate
@@ -43,15 +46,12 @@ class ParkAgent(CellAgent):
 
         cell_dist = self.target
 
-        # print("TARGET", self.target)
-        # print("CURRENT CELL", self.cell)
-
         if self.subtarget:
             cell_dist = self.subtarget
 
         possible_cells = [(c, self.calc_dest_dist(cell_dist, c)) for c in self.cell.neighborhood if (c.SIDEWALK == Terrain.SIDEWALK.value or c.GRASS == Terrain.GRASS.value)]
 
-        max_dist = self.curr_distance()
+        max_dist = float('inf')
         cell_to_chose = None
 
         for cell, distance in possible_cells:
