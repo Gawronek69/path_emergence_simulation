@@ -1,11 +1,7 @@
-from typing import Any
-
-import mesa
+import math
+from typing import List
 from mesa.discrete_space import CellAgent, Cell
-
 import numpy as np
-from numpy import floating
-
 from utils.terrains import Terrain
 
 class ParkAgent(CellAgent):
@@ -21,9 +17,8 @@ class ParkAgent(CellAgent):
         self.distance_weight = distance_weight # distance_weight value should never be equal to 0
         # else it will not reach the destination in some scenarios
         # cuz it will wiggle around the destination
-
-
-
+        self.previous_cell: Cell | None = None
+        self.previous_cells: List[Cell] = []
 
 
     def action(self):
@@ -106,7 +101,11 @@ class ParkAgent(CellAgent):
 
 
     def step(self):
-        self.action()
+        if self.model.kind =="normal":
+            self.action()
+        else:
+            self.silly_action()
+
 
     @staticmethod
     def calc_dest_dist(cell1:Cell, cell2: Cell) -> float:
@@ -137,3 +136,49 @@ class ParkAgent(CellAgent):
         elif cell.GRASS == Terrain.GRASS.value:
             return cell.GRASS_POPULARITY
         else: return 0.0
+
+    """
+    SILLY MODEL BELOW, BE AWARE
+    """
+
+    def silly_action(self) -> None:
+        possible_cells = [c for c in self.cell.neighborhood]
+        best_cells_distance = []
+
+        """Calculating distance to the target for each cell in neighbourhood"""
+        for cell in possible_cells:
+            distance = ParkAgent.calc_dest_dist(cell, self.target)
+            best_cells_distance.append((cell, distance))
+
+        best_cells_distance = sorted(best_cells_distance,
+                                     key=lambda c: c[1] if (c[0].OBSTACLE != Terrain.OBSTACLE.value) else math.inf)
+
+        best_cell = best_cells_distance[0]
+
+        """If the best cell is sidewalk no more need to continue searching"""
+        if best_cell[0].SIDEWALK == Terrain.SIDEWALK.value:
+            self._update_cell_parameters(best_cell[0])
+        else:
+            found_cell = False
+            for cell in best_cells_distance:
+                if cell[0] in self.previous_cells: pass
+                if cell[0].GRASS == Terrain.GRASS.value:
+                    """Probability of entering a grass cell"""
+                    possibility = self.random.randint(Terrain.GRASS.value, 100) <= cell[0].GRASS_POPULARITY
+                    if possibility:
+                        self._update_cell_parameters(cell[0])
+                        found_cell = True
+                        break
+                elif cell[0].SIDEWALK == Terrain.SIDEWALK.value:
+                    """Promoting sidewalks if they are better than the previous cell"""
+                    if self.previous_cell and cell[1] < ParkAgent.calc_dest_dist(self.previous_cell, self.target):
+                        self._update_cell_parameters(cell[0])
+                        found_cell = True
+                        break
+            """If sidewalk not found and grass wasn't chosen based on probability let;s continue with the best cell"""
+            if not found_cell: self._update_cell_parameters(best_cell[0])
+
+    def _update_cell_parameters(self, new_cell: Cell) -> None:
+        self.previous_cell = self.cell
+        self.previous_cells.append(self.cell)
+        self.cell = new_cell
