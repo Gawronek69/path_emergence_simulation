@@ -39,7 +39,7 @@ class ParkModel(mesa.Model):
         self.spawn_cells = [
             cell
             for cell in self.grid.all_cells
-            if cell.coordinate in entrances.hyde
+            if cell.coordinate in entrances.doria_pamphil_west
         ]
         self.spawn_agents(3)
 
