@@ -9,16 +9,12 @@ import matplotlib.pyplot as plt
 use run_models to run the simulations and plot_heatmaps to create the results"""
 class GridSearch:
 
-    def __init__(self, directory:str = os.getcwd(), samples:int = 5,   n_workers : int = 1, stop_step:int = 100, distance: int|list[int] = 5, angle:int|list[int] = 90,
-                 terrain_weight:float|list[float] = 1, distance_weight:float|list[float] = 0.2):
+    def __init__(self, directory:str = os.getcwd(), samples:int = 5,   n_workers : int = 1, stop_step:int = 100, **kwargs):
         self.directory = directory
         self.samples = samples
         self.n_workers = n_workers
         self.stop_step = stop_step
-        self.distance = distance
-        self.angle = angle
-        self.terrain_weight = terrain_weight
-        self.distance_weight = distance_weight
+        self.model_params = kwargs
         self.params = self.initialize()
         self.models_data = []
 
@@ -27,24 +23,13 @@ class GridSearch:
     def initialize(self) -> list[dict]:
         params = []
         for i in range(self.samples):
+            agent_params = dict()
+            for name, param in self.model_params.items():
 
-            model_dist = self.distance
-            if isinstance(model_dist, list):
-                model_dist = random.choice(model_dist)
-
-            model_angle = self.angle
-            if isinstance(model_angle, list):
-                model_angle = random.choice(model_angle)
-
-            model_terrain_w = self.terrain_weight
-            if isinstance(model_terrain_w, list):
-                model_terrain_w = random.choice(model_terrain_w)
-
-            model_distance_w = self.distance_weight
-            if isinstance(model_distance_w, list):
-                model_distance_w = random.choice(model_distance_w)
-
-            agent_params = {"distance" : model_dist, "angle" : model_angle, "tile_weight" : model_terrain_w, "distance_weight" : model_distance_w}
+                if isinstance(param, list):
+                    agent_params[name] = random.choice(param)
+                else:
+                    agent_params[name] = param
 
             params.append(agent_params)
 
