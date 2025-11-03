@@ -56,5 +56,6 @@ page = SolaraViz(
     model,
     components=[space],
     model_params=model_params,
+    use_threads=True,
     name="Test model"
 )

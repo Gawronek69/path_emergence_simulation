@@ -23,43 +23,42 @@ class ParkAgent(CellAgent):
         self.previous_cells : List[Cell] = []
 
 
-    def action(self):
+    def action(self) -> None:
         possible_cells = [c for c in self.cell.neighborhood]
-        best_cells_distance = []
+        best_cells_distance  = []
+
         for cell in possible_cells:
             distance = ParkAgent.calc_dest_dist(cell,self.target)
             best_cells_distance.append((cell,distance))
-        best_cells_distance = sorted(best_cells_distance, key=lambda c: c[1] if (c[0].OBSTACLE != Terrain.OBSTACLE.value) else math.inf)
+
+        best_cells_distance = sorted(best_cells_distance,
+                                     key=lambda c: c[1] if (c[0].OBSTACLE != Terrain.OBSTACLE.value) else math.inf)
+
         best_cell = best_cells_distance[0]
-        flag = False
         if best_cell[0].SIDEWALK == Terrain.SIDEWALK.value:
-            self.previous_cell = self.cell
-            self.previous_cells.append(self.cell)
-            self.cell = best_cell[0]
+            self._update_cell_parameters(best_cell[0])
         else:
+            flag = False
             for cell in best_cells_distance:
-                if cell[0] in self.previous_cells:
-                    pass
+                if cell[0] in self.previous_cells: pass
                 if cell[0].GRASS == Terrain.GRASS.value:
-                    possibility = self.random.randint(3,100) <= cell[0].GRASS_POPULARITY
+                    possibility = self.random.randint(Terrain.GRASS.value,100) <= cell[0].GRASS_POPULARITY
                     if possibility:
+                        self._update_cell_parameters(cell[0])
                         flag = True
-                        self.previous_cell = self.cell
-                        self.previous_cells.append(self.cell)
-                        self.cell = cell[0]
                         break
                 elif cell[0].SIDEWALK == Terrain.SIDEWALK.value:
                     if self.previous_cell and cell[1] < ParkAgent.calc_dest_dist(self.previous_cell,self.target):
+                        self._update_cell_parameters(cell[0])
                         flag = True
-                        self.previous_cell = self.cell
-                        self.previous_cells.append(self.cell)
-                        self.cell = cell[0]
-                else:
-                    pass
-            if not flag:
-                self.previous_cell = self.cell
-                self.previous_cells.append(self.cell)
-                self.cell = best_cell[0]
+                        break
+            if not flag: self._update_cell_parameters(best_cell[0])
+
+
+    def _update_cell_parameters(self, new_cell : Cell) -> None:
+        self.previous_cell = self.cell
+        self.previous_cells.append(self.cell)
+        self.cell = new_cell
 
     """ Function that returns the visible tiles by the agent"""
     def select_subtarget(self) -> list[tuple[Cell, float]]:
