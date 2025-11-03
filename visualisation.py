@@ -18,7 +18,7 @@ def propertylayer_portrayal(layer: PropertyLayer) -> PropertyLayerStyle|None:
     """
 
     if layer.name == "OBSTACLE":
-        print(type(layer))
+        # print(type(layer))
         cmap = ListedColormap(["black"])
         return PropertyLayerStyle(
             colormap=cmap,
