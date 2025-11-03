@@ -11,7 +11,8 @@ def get_coordinates(image):
               "doria_pamphil_west": "utils/park_imgs/doria_pamphil_west.png",
               "greenwich": "utils/park_imgs/greenwich.png",
               "blackheath": "utils/park_imgs/blackheath.png",
-              "hyde": "utils/park_imgs/hyde.png",}
+              "hyde": "utils/park_imgs/hyde.png",
+              "richmond": "utils/park_imgs/richmond.png",}
 
     try:
         path = images[image]
