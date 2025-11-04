@@ -12,7 +12,8 @@ def get_coordinates(image):
               "greenwich": "utils/park_imgs/greenwich.png",
               "blackheath": "utils/park_imgs/blackheath.png",
               "hyde": "utils/park_imgs/hyde.png",
-              "richmond": "utils/park_imgs/richmond.png",}
+              "richmond": "utils/park_imgs/richmond.png",
+              "clapham": "utils/park_imgs/clapham.png",}
 
     try:
         path = images[image]

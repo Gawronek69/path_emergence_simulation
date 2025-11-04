@@ -41,7 +41,7 @@ model_params = {
     },
 }
 
-model = ParkModel(5,100,100, kind="silly")
+model = ParkModel(5,100,100)
 model.setup()
 
 def post_process(ax):
