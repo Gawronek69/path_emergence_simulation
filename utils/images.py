@@ -39,3 +39,20 @@ def get_coordinates(image):
 
 
     return coords.astype('uint8')
+
+
+def binarize_desired_paths(path, name):
+    try:
+        img = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
+    except Exception as e:
+        print("Error when preprocessing file " + path + ": " + str(e))
+        return -1
+
+    img = cv2.resize(img, (100, 100), interpolation=cv2.INTER_BITS)
+
+    binary = (img > 200).astype('uint8')
+
+    np.save(f"{name}.npy", binary)
+
+    # use np.load to get 0/1 values for each park representing desired paths
+    # loaded = np.load("array.npy")
