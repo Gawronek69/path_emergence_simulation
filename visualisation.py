@@ -42,6 +42,18 @@ def propertylayer_portrayal(layer: PropertyLayer) -> PropertyLayerStyle|None:
             alpha= (np.transpose(layer.data) == Terrain.SIDEWALK.value).astype(float),
             colorbar=False
         )
+    elif layer.name == "VISION":
+        return PropertyLayerStyle(
+            colormap=ListedColormap(["yellow"]),
+            alpha=(np.transpose(layer.data) == 1).astype(float)/3,
+            colorbar=False,
+        )
+    elif layer.name == "SUBTARGETS":
+        return PropertyLayerStyle(
+            colormap=ListedColormap(["turquoise"]),
+            alpha=(np.transpose(layer.data) > 0).astype(float),
+            colorbar=False,
+        )
 
 
 def agent_portrayal(agent):

@@ -3,6 +3,7 @@ import math
 import mesa
 from mesa import DataCollector
 from mesa.discrete_space import OrthogonalMooreGrid, CellAgent
+from mesa.experimental.cell_space import PropertyLayer
 
 
 from environment import TestEnvironment
@@ -29,6 +30,12 @@ class ParkModel(mesa.Model):
         self.kind = kind
         self.grass_decay_rate = grass_decay_rate
         self.grass_growth_probability = grass_growth_probability
+        self.agents_vision = PropertyLayer(
+            "VISION", dimensions=(width, height), default_value=0, dtype=int
+        )
+        self.targets_vision = PropertyLayer(
+            "SUBTARGETS", dimensions=(width, height), default_value=0, dtype=int
+        )
 
     def __str__(self):
         return f"Model with params: {self.agent_params} and seed {self._seed}"
@@ -39,6 +46,8 @@ class ParkModel(mesa.Model):
         self.grid.add_property_layer(grass)
         self.grid.add_property_layer(obstacles)
         self.grid.add_property_layer(grass_popularity)
+        self.grid.add_property_layer(self.agents_vision)
+        self.grid.add_property_layer(self.targets_vision)
 
 
         self.spawn_cells = [
@@ -66,7 +75,7 @@ class ParkModel(mesa.Model):
 
     def step(self):
         self.data_collector.collect(self)
-
+        self.grid.VISION.data = self.grid.VISION.data * 0
         self.populate_heatmap()
 
         self.step_count += 1
@@ -106,8 +115,12 @@ class ParkModel(mesa.Model):
 
 
 
-    def remove_agents(self, agents: list[CellAgent]) -> None:
+    def remove_agents(self, agents: list[ParkAgent]) -> None:
         for agent in agents:
+
+            if agent.subtarget:
+                self.grid.SUBTARGETS.data[agent.subtarget.coordinate] -= 1
+
             self.agents.remove(agent)
             self.grid[agent.cell.coordinate].remove_agent(agent)
 

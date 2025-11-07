@@ -19,20 +19,24 @@ class ParkAgent(CellAgent):
         # cuz it will wiggle around the destination
         self.previous_cell: Cell | None = None
         self.previous_cells: List[Cell] = []
+        self.vision_range = []
 
 
     def action(self):
         """If agent reached the subtarget then we have to find next subtarget"""
         if self.subtarget and self.subtarget.coordinate == self.cell.coordinate:
+            self.model.grid.SUBTARGETS.data[self.subtarget.coordinate] = 0
             self.subtarget = None
+
 
         """Find which point in the vision arc is best for next destination of the agent"""
         if self.subtarget is None:
             candidates = self.select_subtarget()
-
+            self.vision_range = candidates
             best_cell = None
             best_aff = float('-inf')
             for candidate, candidate_aff in candidates:
+                self.model.grid.VISION.data[candidate.coordinate] = 1
                 if candidate_aff > best_aff:
                     best_aff = candidate_aff
                     best_cell = candidate
@@ -43,6 +47,7 @@ class ParkAgent(CellAgent):
 
         if self.subtarget:
             cell_dist = self.subtarget
+            self.model.grid.SUBTARGETS.data[self.subtarget.coordinate] += 1
 
         possible_cells = [(c, self.calc_dest_dist(cell_dist, c)) for c in self.cell.neighborhood if (c.SIDEWALK == Terrain.SIDEWALK.value or c.GRASS == Terrain.GRASS.value)]
 
@@ -70,7 +75,7 @@ class ParkAgent(CellAgent):
             return (np.power(vec, 2)).sum() <= np.power(self.distance, 2)
 
         def cell_in_angle(vec: np.array) -> bool:
-            return np.dot(vec, target_vector)/(np.linalg.norm(vec) * np.linalg.norm(target_vector)) >= np.cos(self.angle // 2)
+            return np.dot(vec, target_vector)/(np.linalg.norm(vec) * np.linalg.norm(target_vector)) >= np.cos(self.angle)
 
         """Recursively starts finding candidates starting from closest points"""
         def rec_find_cells(parent_cell: Cell, main_vec: np.array) -> None:
@@ -79,6 +84,8 @@ class ParkAgent(CellAgent):
             """If cell in in the radius and cosine of the destination vector and candidate vector is bigger than vision angle
              and the cell is not obstacle, then cell is in the vision arc of the agent """
             if cell_in_radius(parent_vec) and cell_in_angle(parent_vec) and parent_cell.OBSTACLE == 0:
+
+
 
                 cells.append((parent_cell, self.return_cell_affordance(parent_cell)))
                 visited.add(parent_cell)
@@ -130,7 +137,6 @@ class ParkAgent(CellAgent):
     everything up we get the cell value, without checking the type"""
     @staticmethod
     def get_tile_value(cell: Cell) -> float:
-        #return cell.SIDEWALK + cell.GRASS + cell.OBSTACLE
         if cell.SIDEWALK == Terrain.SIDEWALK.value:
             return 100.0
         elif cell.GRASS == Terrain.GRASS.value:
