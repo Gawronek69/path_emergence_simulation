@@ -6,7 +6,7 @@ from utils.terrains import Terrain
 
 class ParkAgent(CellAgent):
 
-    def __init__(self, model, cell:Cell, target: Cell, angle: int = 120, distance: int = 17, tile_weight: float = 1, distance_weight: float = 0.4):
+    def __init__(self, model, cell:Cell, target: Cell, angle: int = 120, distance: int = 12, tile_weight: float = 1, distance_weight: float = 0.6):
         super().__init__(model)
         self.cell = cell
         self.target = target
@@ -75,7 +75,7 @@ class ParkAgent(CellAgent):
             return (np.power(vec, 2)).sum() <= np.power(self.distance, 2)
 
         def cell_in_angle(vec: np.array) -> bool:
-            return np.dot(vec, target_vector)/(np.linalg.norm(vec) * np.linalg.norm(target_vector)) >= np.cos(self.angle)
+            return np.dot(vec, target_vector)/(np.linalg.norm(vec) * np.linalg.norm(target_vector)) >= np.cos(np.deg2rad(self.angle/2))
 
         """Recursively starts finding candidates starting from closest points"""
         def rec_find_cells(parent_cell: Cell, main_vec: np.array) -> None:

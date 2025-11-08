@@ -56,7 +56,7 @@ def HeatMap(model:ParkModel):
     ax = fig.subplots()
 
     sns.heatmap(
-        data=model.heatmap,
+        data=np.flipud(model.heatmap),
         ax=ax,
         cmap="Oranges",
         vmin=0,
