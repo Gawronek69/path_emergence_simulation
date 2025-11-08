@@ -1,10 +1,13 @@
 import os
 import multiprocessing as mp
+
+from main import model
 from model import ParkModel
 import random
 import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
+from utils.terrains import Terrain
 
 """GridSearch like class for generating many simulataions with different params at once
 use run_models to run the simulations and plot_heatmaps to create the results"""
@@ -18,7 +21,6 @@ class GridSearch:
         self.model_params = kwargs
         self.params = self.initialize()
         self.models_data = []
-
 
 
     def initialize(self) -> list[dict]:
@@ -36,65 +38,42 @@ class GridSearch:
 
         return params
 
+
+    """plots heatmaps of agents movements from created simulations"""
     def plot_heatmaps(self) -> None:
 
-        if not os.path.isdir(self.directory):
-            os.mkdir(self.directory)
+        plot_dirname = "heatmaps"
 
-        heat_path = os.path.join(self.directory, "heatmaps")
-        if not os.path.exists(heat_path):
-            os.mkdir(heat_path)
+        self.check_create_dir(plot_dirname)
 
 
         for i, model in enumerate(self.models_data):
 
             plt.figure(figsize=(20, 14), dpi=300)
-
-            model_heatmap_data = model["heatmap"]
+            ax = plt.gca()
             model_params = model["params"]
 
-            sns.heatmap(
-                data=np.flipud(model_heatmap_data),
-                cmap="Oranges",
-                vmin=0,
-                vmax=model_heatmap_data.max(),
-            )
+            self.get_heatmap(ax, model_idx= i)
 
-            print(f"Saving to {self.directory}/heatmaps/{model_params}{i}.png")
+            print(f"Saving to {self.directory}/{plot_dirname}/{model_params}{i}.png")
             plt.title(f"{model_params}")
-            plt.savefig(f"{self.directory}/heatmaps/{model_params}{i}.png")
+            plt.savefig(f"{self.directory}/{plot_dirname}/{model_params}{i}.png")
             plt.close()
 
+    """function for getting the score of the simulation compared to the real emerged paths"""
     def get_acc(self) -> float:
         pass
 
-    def plot_map_and_heat(self) -> None:
-        pass
+    """plots maps states and heatmaps of agents movement together from created simulations"""
+    def plot_map_and_heat(self, agents: bool = True) -> None:
 
-    def plot_map_state(self, agents: bool = True) -> None:
+        plot_dirname = "combined"
 
-        if not os.path.isdir(self.directory):
-            os.mkdir(self.directory)
-
-        map_path = os.path.join(self.directory, "maps")
-        if not os.path.exists(map_path):
-            os.mkdir(os.path.join(self.directory, "maps"))
-
-        def get_cell_color(val: int):
-            if val >= 100:
-                return "grey"
-            elif val == 0:
-                return "black"
-            else:
-                cmap = plt.get_cmap("summer")
-                norm = plt.Normalize(vmin=1, vmax=100)
-                print(cmap(norm(val)))
-                return cmap(norm(val))
+        self.check_create_dir(plot_dirname)
 
         for index, model in enumerate(self.models_data):
             model_name = model["params"]
             model_map_data = model["cells"]
-            model_agents_pos = model["agents"]
 
             plt.figure(figsize=(20, 14), dpi=300)
             ax = plt.gca()
@@ -103,21 +82,86 @@ class GridSearch:
             ax.set_ylim(0, y)
             ax.set_aspect("equal")
 
-            for j in range(y):
-                for i in range(x):
-                    color = get_cell_color(model_map_data[j, i])
-                    ax.add_patch(plt.Rectangle((j, i), 1, 1, facecolor=color, edgecolor=None))
 
-            if agents:
-                for (j, i) in model_agents_pos:
-                    ax.add_patch(plt.Circle((j, i), 1, facecolor="red", edgecolor=None))
+            self.get_map_state(ax, model_idx=index, plot_agents=agents, alpha=1)
+            self.get_heatmap(ax, model_idx=index, alpha=0.3)
 
-            print(f"Saving to {self.directory}/maps/{model_name}{index}.png")
+            print(f"Saving to {self.directory}/{plot_dirname}/{model_name}{index}.png")
             plt.title(f"{model_name}")
-            plt.savefig(f"{self.directory}/maps/{model_name}{index}.png")
+            plt.savefig(f"{self.directory}/{plot_dirname}/{model_name}{index}.png")
             plt.close()
 
+    """plots maps state from created simulations"""
+    def plot_map_state(self, agents: bool = True) -> None:
 
+        plot_dirname = "maps"
+
+        self.check_create_dir(plot_dirname)
+
+        for index, model in enumerate(self.models_data):
+            model_name = model["params"]
+            model_map_data = model["cells"]
+
+            plt.figure(figsize=(20, 14), dpi=300)
+            ax = plt.gca()
+            y, x = model_map_data.shape
+            ax.set_xlim(0, x)
+            ax.set_ylim(0, y)
+            ax.set_aspect("equal")
+
+            self.get_map_state(ax, model_idx= index, plot_agents=agents, alpha=1)
+
+            print(f"Saving to {self.directory}/{plot_dirname}/{model_name}{index}.png")
+            plt.title(f"{model_name}")
+            plt.savefig(f"{self.directory}/{plot_dirname}/{model_name}{index}.png")
+            plt.close()
+
+    """creates heatmap plot"""
+    def get_heatmap(self, ax: plt.Axes, model_idx: int,  alpha: float = 1, ) -> None:
+
+        heatmap_data = self.models_data[model_idx]["heatmap"]
+
+        sns.heatmap(
+            data=np.transpose(heatmap_data),
+            cmap="Oranges",
+            ax = ax,
+            vmin=0,
+            vmax=heatmap_data.max(),
+            alpha=alpha,
+        )
+
+        ax.invert_yaxis()
+
+    """creates map state plot"""
+    def get_map_state(self, ax: plt.Axes, model_idx: int, alpha: float = 1, plot_agents: bool = True) -> None:
+
+        def get_cell_color(val: int):
+            if val >= Terrain.SIDEWALK.value:
+                return "grey"
+            elif val == 0:
+                return "black"
+            else:
+                cmap = plt.get_cmap("summer")
+                norm = plt.Normalize(vmin=1, vmax=100)
+                return cmap(norm(val))
+
+        model_map_data = self.models_data[model_idx]["cells"]
+        model_agents_pos = self.models_data[model_idx]["agents"]
+
+        y, x = model_map_data.shape
+
+        for j in range(y):
+            for i in range(x):
+                color = get_cell_color(model_map_data[j, i])
+                ax.add_patch(plt.Rectangle((j, i), 1, 1, facecolor=color, edgecolor=None, alpha=alpha))
+
+        if plot_agents:
+            for (j, i) in model_agents_pos:
+                ax.add_patch(plt.Circle((j, i), 1, facecolor="red", edgecolor=None, alpha=alpha))
+
+
+
+    """task for each process - creates models, runs the simulations and returns the simulation data to the queue"""
     def _model_task(self, model_params: list[dict], queue: mp.Queue) -> None:
 
         def get_coord_value(i: int, j: int) -> dict:
@@ -141,6 +185,7 @@ class GridSearch:
 
         queue.put(models_data)
 
+    """creates processes for running simulations and runs the tasks there"""
     def run_models(self):
 
         """Multiprocessing stuff so it will return models (cuz u cant pass as ref)"""
@@ -168,3 +213,14 @@ class GridSearch:
             final_models.extend(results_queue.get())
 
         self.models_data = final_models
+
+
+    """Checks whether exists the directory for plot directories and the plot directories as well"""
+    def check_create_dir(self, plot_dirname: str) -> None:
+
+        if not os.path.isdir(self.directory):
+            os.mkdir(self.directory)
+
+        map_path = os.path.join(self.directory, plot_dirname)
+        if not os.path.exists(map_path):
+            os.mkdir(os.path.join(self.directory, plot_dirname))
