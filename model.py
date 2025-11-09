@@ -9,17 +9,17 @@ from mesa.experimental.cell_space import PropertyLayer
 from environment import TestEnvironment
 from agent import ParkAgent
 from utils.terrains import Terrain
-from utils import entrances, data_collecting
+from utils.images import binarize_desired_paths
 from utils.data_collecting import gather_steps
 import numpy as np
 
 
 class ParkModel(mesa.Model):
-    def __init__(self, num_agents=5, width=100, height=100, seed = 42, kind="normal", grass_decay_rate=0.2, grass_growth_probability=0.3, agent_params : dict = None):
+    def __init__(self, num_agents=5, width=100, height=100, seed = 41, kind="normal", grass_decay_rate=0.8, grass_growth_probability=0.3, agent_params : dict = None):
         super().__init__(seed=seed)
         self.num_agents = num_agents
         self.grid = OrthogonalMooreGrid((width, height), torus=False, random=self.random)
-        self.environment = TestEnvironment(width, height)
+        self.environment = TestEnvironment(width, height, "doria_pamphil")
         self.step_count = 0
         self.spawn_cells = None
         self.data_collector = DataCollector(
@@ -53,7 +53,7 @@ class ParkModel(mesa.Model):
         self.spawn_cells = [
             cell
             for cell in self.grid.all_cells
-            if cell.coordinate in entrances.greenwich
+            if cell.coordinate in self.environment.entrances
         ]
         self.spawn_agents(3)
 
@@ -87,7 +87,10 @@ class ParkModel(mesa.Model):
         self.remove_agents(del_agents)
         self.agents.shuffle_do("step")
         agent_cells = self._handle_grass_decay()
-        self._handle_grass_growth(agent_cells)
+        #self._handle_grass_growth(agent_cells)
+
+        if self.step_count%100 == 0:
+            print("Step: ", self.step_count, ",accuracy: ", self.calculate_accuracy())
 
     """Function that simulates grass decay"""
     def _handle_grass_decay(self):
@@ -130,3 +133,10 @@ class ParkModel(mesa.Model):
         for (x, y) in steps:
             self.heatmap[x, y] += 1
 
+    def calculate_accuracy(self):
+        terrain_after_simulation = self.grid.GRASS_POPULARITY.data
+        created_paths = (terrain_after_simulation > 50).astype(int)
+        reference_paths = np.load(f"utils/desired_paths_matrixes/" + self.environment.park_name + ".npy")
+        mask = reference_paths==1
+        accuracy = np.sum(created_paths[mask] == 1) / np.sum(mask)
+        return accuracy

@@ -1,7 +1,6 @@
 import os
 import multiprocessing as mp
 
-from main import model
 from model import ParkModel
 import random
 import seaborn as sns
@@ -62,7 +61,8 @@ class GridSearch:
 
     """function for getting the score of the simulation compared to the real emerged paths"""
     def get_acc(self) -> float:
-        pass
+        for model in self.models_data:
+            print("Accuracy of ", model["params"], " : ", model["accuracy"])
 
     """plots maps states and heatmaps of agents movement together from created simulations"""
     def plot_map_and_heat(self, agents: bool = True) -> None:
@@ -181,7 +181,7 @@ class GridSearch:
             model.setup()
             for _ in range(self.stop_step):
                 model.step()
-            models_data.append({"params" : model_item, "heatmap": model.heatmap, "cells": get_map_matrix(), "agents": [agent.cell.coordinate for agent in model.agents]})
+            models_data.append({"params" : model_item, "heatmap": model.heatmap, "cells": get_map_matrix(), "agents": [agent.cell.coordinate for agent in model.agents], "accuracy" : model.calculate_accuracy()})
 
         queue.put(models_data)
 
