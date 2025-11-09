@@ -18,7 +18,7 @@ class Environment:
 
 class TestEnvironment(Environment):
 
-    def __init__(self, width, height):
+    def __init__(self, width, height, park_name: str):
         super().__init__(width, height)
         self.sidewalk_coords = []
         self.sidewalk_layer = None
@@ -27,9 +27,11 @@ class TestEnvironment(Environment):
         self.grass_coords = []
         self.grass_layer = None
         self.grass_popularity_layer = None
+        self.park_name = park_name
+        self.gradient_maps = {}
 
     def get_sidewalk_cords(self):
-        coords = images.get_coordinates("greenwich")
+        coords = images.get_coordinates(self.park_name)
 
         for x in range(100):
             for y in range(100):
@@ -37,14 +39,14 @@ class TestEnvironment(Environment):
                     self.sidewalk_coords.append((x, y))
 
     def get_grass_cords(self):
-        coords = images.get_coordinates("greenwich")
+        coords = images.get_coordinates(self.park_name)
         for x in range(100):
             for y in range(100):
                 if coords[x, y] == Terrain.GRASS.value:
                     self.grass_coords.append((x, y))
 
     def get_obstacles_cords(self):
-        coords = images.get_coordinates("greenwich")
+        coords = images.get_coordinates(self.park_name)
 
         for x in range(100):
             for y in range(100):
