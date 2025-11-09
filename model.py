@@ -12,10 +12,11 @@ from utils.terrains import Terrain
 from utils import entrances, data_collecting
 from utils.data_collecting import gather_steps
 import numpy as np
+from utils.step_metrics import AbstractMetric, ClosestMetric
 
 
 class ParkModel(mesa.Model):
-    def __init__(self, num_agents=5, width=100, height=100, seed = 42, kind="normal", grass_decay_rate=0.2, grass_growth_probability=0.3, agent_params : dict = None):
+    def __init__(self, metric: AbstractMetric, num_agents=5, width=100, height=100, seed = 42, kind="normal", grass_decay_rate=0.2, grass_growth_probability=0.3, agent_params : dict = None):
         super().__init__(seed=seed)
         self.num_agents = num_agents
         self.grid = OrthogonalMooreGrid((width, height), torus=False, random=self.random)
@@ -36,6 +37,7 @@ class ParkModel(mesa.Model):
         self.targets_vision = PropertyLayer(
             "SUBTARGETS", dimensions=(width, height), default_value=0, dtype=int
         )
+        self.metric = metric
 
     def __str__(self):
         return f"Model with params: {self.agent_params} and seed {self._seed}"

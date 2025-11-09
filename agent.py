@@ -1,12 +1,15 @@
+from __future__ import annotations
 import math
-from typing import List
+from typing import List, TYPE_CHECKING
 from mesa.discrete_space import CellAgent, Cell
 import numpy as np
 from utils.terrains import Terrain
+if TYPE_CHECKING:
+    from model import ParkModel
 
 class ParkAgent(CellAgent):
 
-    def __init__(self, model, cell:Cell, target: Cell, angle: int = 120, distance: int = 12, tile_weight: float = 1, distance_weight: float = 0.6):
+    def __init__(self, model: ParkModel, cell:Cell, target: Cell, angle: int = 120, distance: int = 12, tile_weight: float = 1, distance_weight: float = 0.6):
         super().__init__(model)
         self.cell = cell
         self.target = target
@@ -41,29 +44,11 @@ class ParkAgent(CellAgent):
                     best_aff = candidate_aff
                     best_cell = candidate
             self.subtarget = best_cell
-            # print("CHOSEN CELL", self.subtarget)
-
-        cell_dist = self.target
 
         if self.subtarget:
-            cell_dist = self.subtarget
             self.model.grid.SUBTARGETS.data[self.subtarget.coordinate] += 1
 
-        possible_cells = [(c, self.calc_dest_dist(cell_dist, c)) for c in self.cell.neighborhood if (c.SIDEWALK == Terrain.SIDEWALK.value or c.GRASS == Terrain.GRASS.value)]
-
-        max_dist = float('inf')
-        cell_to_chose = None
-
-        for cell, distance in possible_cells:
-            if distance < max_dist:
-                cell_to_chose = cell
-                max_dist = distance
-
-        if cell_to_chose:
-            self.cell = cell_to_chose
-
-        # if len(possible_cells) > 0:
-        #     self.cell = self.model.random.choice(possible_cells)
+        self.cell = self.model.metric.get_cells_rank(self)[0][0]
 
     """ Function that returns the visible tiles by the agent"""
     def select_subtarget(self) -> list[tuple[Cell, float]]:

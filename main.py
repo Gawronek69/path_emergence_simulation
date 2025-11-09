@@ -1,7 +1,8 @@
+import numpy as np
 from matplotlib.figure import Figure
 from mesa.visualization import SolaraViz
 from mesa.visualization.components.matplotlib_components import make_mpl_space_component
-
+from utils.step_metrics import ClosestMetric, AffordanceMetric
 import solara
 import seaborn as sns
 
@@ -39,9 +40,10 @@ model_params = {
         "max": 500,
         "step": 1,
     },
+    "metric" : AffordanceMetric()
 }
 
-model = ParkModel(5,100,100)
+model = ParkModel(AffordanceMetric(), 5,100,100, )
 model.setup()
 
 def post_process(ax):
@@ -56,13 +58,13 @@ def HeatMap(model:ParkModel):
     ax = fig.subplots()
 
     sns.heatmap(
-        data=np.flipud(model.heatmap),
+        data=np.transpose(model.heatmap),
         ax=ax,
         cmap="Oranges",
         vmin=0,
         vmax=model.heatmap.max(),
     )
-
+    ax.invert_yaxis()
     ax.set_title(f"Tiles visitation density for step {model.step_count}")
 
     return solara.FigureMatplotlib(fig)
