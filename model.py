@@ -15,7 +15,7 @@ import numpy as np
 
 
 class ParkModel(mesa.Model):
-    def __init__(self, num_agents=5, width=100, height=100, seed = 41, kind="normal", grass_decay_rate=0.8, grass_growth_probability=0.3, agent_params : dict = None):
+    def __init__(self, num_agents=5, width=100, height=100, seed = 41, kind="normal", grass_decay_rate=0.8, grass_growth_probability=0.3, agent_params : dict = None, obstacle_margin_percentage=0.5):
         super().__init__(seed=seed)
         self.num_agents = num_agents
         self.grid = OrthogonalMooreGrid((width, height), torus=False, random=self.random)
@@ -29,6 +29,7 @@ class ParkModel(mesa.Model):
         self.agent_params = agent_params
         self.kind = kind
         self.grass_decay_rate = grass_decay_rate
+        self.obstacle_margin_percentage = obstacle_margin_percentage
         self.grass_growth_probability = grass_growth_probability
         self.agents_vision = PropertyLayer(
             "VISION", dimensions=(width, height), default_value=0, dtype=int
@@ -41,10 +42,11 @@ class ParkModel(mesa.Model):
         return f"Model with params: {self.agent_params} and seed {self._seed}"
 
     def setup(self):
-        terrain, obstacles, grass, grass_popularity = self.environment.create()
+        terrain, obstacles, obstacles_margin, grass, grass_popularity = self.environment.create()
         self.grid.add_property_layer(terrain)
         self.grid.add_property_layer(grass)
         self.grid.add_property_layer(obstacles)
+        self.grid.add_property_layer(obstacles_margin)
         self.grid.add_property_layer(grass_popularity)
         self.grid.add_property_layer(self.agents_vision)
         self.grid.add_property_layer(self.targets_vision)
@@ -104,6 +106,13 @@ class ParkModel(mesa.Model):
                     self.grid.GRASS_POPULARITY.data[agent.cell.coordinate] = 100
                 else:
                     self.grid.GRASS_POPULARITY.data[agent.cell.coordinate] += math.ceil(increment)
+            if agent.cell.OBSTACLE_MARGIN == Terrain.OBSTACLE_MARGIN.value:
+                value = self.obstacle_margin_percentage * self.grid.GRASS_POPULARITY.data[agent.cell.coordinate]
+                increment = max(1, math.ceil(self.grass_decay_rate * value * self.obstacle_margin_percentage))
+                if value + increment > 40:
+                    self.grid.GRASS_POPULARITY.data[agent.cell.coordinate] = 40
+                else:
+                    self.grid.GRASS_POPULARITY.data[agent.cell.coordinate] += math.ceil(increment)
         return agent_cells
 
     """Function that simulates grass regrowth"""
@@ -115,8 +124,8 @@ class ParkModel(mesa.Model):
                 """Reducing only the medium paths"""
                 if 40 < value < 80 and self.random.random() < self.grass_growth_probability:
                     self.grid.GRASS_POPULARITY.data[cell.coordinate] -= 1
-
-
+            if cell.OBSTACLE_MARGIN == Terrain.OBSTACLE_MARGIN.value and cell not in agent_cells:
+                self.grid.GRASS_POPULARITY.data[cell.coordinate] *= self.obstacle_margin_percentage
 
     def remove_agents(self, agents: list[ParkAgent]) -> None:
         for agent in agents:

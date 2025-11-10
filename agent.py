@@ -6,7 +6,7 @@ from utils.terrains import Terrain
 
 class ParkAgent(CellAgent):
 
-    def __init__(self, model, cell:Cell, target: Cell, angle: int = 120, distance: int = 12, tile_weight: float = 1, distance_weight: float = 0.6):
+    def __init__(self, model, cell:Cell, target: Cell, angle: int = 120, distance: int = 12, tile_weight: float = 3, distance_weight: float = 0.3):
         super().__init__(model)
         self.cell = cell
         self.target = target
@@ -20,6 +20,7 @@ class ParkAgent(CellAgent):
         self.previous_cell: Cell | None = None
         self.previous_cells: List[Cell] = []
         self.vision_range = []
+        self.obstacle_percentage = 0.2
 
 
     def action(self):
@@ -49,7 +50,7 @@ class ParkAgent(CellAgent):
             cell_dist = self.subtarget
             self.model.grid.SUBTARGETS.data[self.subtarget.coordinate] += 1
 
-        possible_cells = [(c, self.calc_dest_dist(cell_dist, c)) for c in self.cell.neighborhood if (c.SIDEWALK == Terrain.SIDEWALK.value or c.GRASS == Terrain.GRASS.value)]
+        possible_cells = [(c, self.calc_dest_dist(cell_dist, c)) for c in self.cell.neighborhood if (c.SIDEWALK == Terrain.SIDEWALK.value or c.GRASS == Terrain.GRASS.value or c.OBSTACLE_MARGIN == Terrain.OBSTACLE_MARGIN.value)]
 
         max_dist = float('inf')
         cell_to_chose = None
@@ -141,6 +142,8 @@ class ParkAgent(CellAgent):
             return 100.0
         elif cell.GRASS == Terrain.GRASS.value:
             return cell.GRASS_POPULARITY
+        elif cell.OBSTACLE_MARGIN == Terrain.OBSTACLE_MARGIN.value:
+            return min(0.1 * cell.GRASS_POPULARITY, 1)
         else: return 0.0
 
     """

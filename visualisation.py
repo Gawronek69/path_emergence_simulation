@@ -27,6 +27,13 @@ def propertylayer_portrayal(layer: PropertyLayer) -> PropertyLayerStyle|None:
             colorbar=False,
 
         )
+    elif layer.name == "OBSTACLE_MARGIN":
+        return PropertyLayerStyle(
+            colormap=ListedColormap(["pink"]),
+            alpha=(np.transpose(layer.data) == Terrain.OBSTACLE_MARGIN.value).astype(float),
+            colorbar=False
+        )
+
     elif layer.name == "GRASS_POPULARITY":
         return PropertyLayerStyle(
             colormap="summer",
