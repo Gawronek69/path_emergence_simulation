@@ -4,7 +4,7 @@ import mesa
 from mesa import DataCollector
 from mesa.discrete_space import OrthogonalMooreGrid, CellAgent
 from mesa.experimental.cell_space import PropertyLayer
-
+from scipy.ndimage import binary_dilation
 
 from environment import TestEnvironment
 from agent import ParkAgent
@@ -133,10 +133,12 @@ class ParkModel(mesa.Model):
         for (x, y) in steps:
             self.heatmap[x, y] += 1
 
-    def calculate_accuracy(self):
+    def calculate_accuracy(self, include_dilatation=False):
         terrain_after_simulation = self.grid.GRASS_POPULARITY.data
         #we hate to determine the threshold
         created_paths = (terrain_after_simulation > 10).astype(int)
+        created_paths = np.rot90(created_paths, k=1)
+        if include_dilatation:  created_paths = binary_dilation(created_paths, iterations=1).astype(int)
         reference_paths = np.load(f"utils/desired_paths_matrixes/" + self.environment.park_name + ".npy")
         mask = reference_paths==1
         accuracy = np.sum(created_paths[mask] == 1) / np.sum(mask)
