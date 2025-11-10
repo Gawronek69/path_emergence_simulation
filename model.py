@@ -84,9 +84,11 @@ class ParkModel(mesa.Model):
         if self.step_count % 10 == 0 and len(self.agents) <= 15:
             self.spawn_agents(3)
 
-
+        stuck_agents = [agent for agent in self.agents if len(set(agent.last_10_cells)) == 2 and agent.steps_count > 10]
+        self.remove_agents(stuck_agents)
         del_agents= [agent for agent in self.agents if agent.target == agent.cell]
         self.remove_agents(del_agents)
+
         self.agents.shuffle_do("step")
         agent_cells = self._handle_grass_decay()
         #self._handle_grass_growth(agent_cells)

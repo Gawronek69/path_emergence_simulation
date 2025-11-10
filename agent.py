@@ -1,4 +1,5 @@
 import math
+from collections import deque
 from typing import List
 from mesa.discrete_space import CellAgent, Cell
 import numpy as np
@@ -19,6 +20,8 @@ class ParkAgent(CellAgent):
         # cuz it will wiggle around the destination
         self.previous_cell: Cell | None = None
         self.previous_cells: List[Cell] = []
+        self.last_10_cells = deque(maxlen=10)
+        self.steps_count = 0
         self.vision_range = []
         self.obstacle_percentage = 0.2
 
@@ -62,6 +65,9 @@ class ParkAgent(CellAgent):
 
         if cell_to_chose:
             self.cell = cell_to_chose
+
+        self.steps_count += 1
+        self.last_10_cells.append(self.cell.coordinate)
 
         # if len(possible_cells) > 0:
         #     self.cell = self.model.random.choice(possible_cells)
