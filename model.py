@@ -90,7 +90,7 @@ class ParkModel(mesa.Model):
         #self._handle_grass_growth(agent_cells)
 
         if self.step_count%100 == 0:
-            print("Step: ", self.step_count, ",accuracy: ", self.calculate_accuracy())
+            print("Step: ", self.step_count, ",accuracy: ", self.calculate_accuracy()[0])
 
     """Function that simulates grass decay"""
     def _handle_grass_decay(self):
@@ -135,8 +135,11 @@ class ParkModel(mesa.Model):
 
     def calculate_accuracy(self):
         terrain_after_simulation = self.grid.GRASS_POPULARITY.data
-        created_paths = (terrain_after_simulation > 50).astype(int)
+        #we hate to determine the threshold
+        created_paths = (terrain_after_simulation > 10).astype(int)
         reference_paths = np.load(f"utils/desired_paths_matrixes/" + self.environment.park_name + ".npy")
         mask = reference_paths==1
         accuracy = np.sum(created_paths[mask] == 1) / np.sum(mask)
-        return accuracy
+        return accuracy, created_paths, reference_paths
+
+
