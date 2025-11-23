@@ -1,11 +1,12 @@
 from __future__ import annotations
-
 import math
+from typing import List, TYPE_CHECKING
 from collections import deque
-from typing import List
 from mesa.discrete_space import CellAgent, Cell
 import numpy as np
 from utils.terrains import Terrain
+if TYPE_CHECKING:
+    from model import ParkModel
 
 import functools
 import time
@@ -73,32 +74,11 @@ class ParkAgent(CellAgent):
                     best_aff = candidate_aff
                     best_cell = candidate
             self.subtarget = best_cell
-            # print("CHOSEN CELL", self.subtarget)
-
-        cell_dist = self.target
 
         if self.subtarget:
-            cell_dist = self.subtarget
             self.model.grid.SUBTARGETS.data[self.subtarget.coordinate] += 1
 
-        possible_cells = [(c, self.calc_dest_dist(cell_dist, c)) for c in self.cell.neighborhood if (c.SIDEWALK == Terrain.SIDEWALK.value or c.GRASS == Terrain.GRASS.value or c.OBSTACLE_MARGIN == Terrain.OBSTACLE_MARGIN.value)]
-
-        max_dist = float('inf')
-        cell_to_chose = None
-
-        for cell, distance in possible_cells:
-            if distance < max_dist:
-                cell_to_chose = cell
-                max_dist = distance
-
-        if cell_to_chose:
-            self.cell = cell_to_chose
-
-        self.steps_count += 1
-        self.last_10_cells.append(self.cell.coordinate)
-
-        # if len(possible_cells) > 0:
-        #     self.cell = self.model.random.choice(possible_cells)
+        self.cell = self.model.metric.get_cells_rank(self)[0][0]
 
     """ Function that returns the visible tiles by the agent"""
     @log_time

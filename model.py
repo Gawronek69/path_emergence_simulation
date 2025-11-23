@@ -12,14 +12,16 @@ from utils.terrains import Terrain
 from utils.images import binarize_desired_paths
 from utils.data_collecting import gather_steps
 import numpy as np
+from utils.step_metrics import AbstractMetric, ClosestMetric
 
 
 class ParkModel(mesa.Model):
-    def __init__(self, num_agents=5, width=100, height=100, seed = 41, kind="normal", grass_decay_rate=0.8, grass_growth_probability=0.3, agent_params : dict = None, obstacle_margin_percentage=0.5):
+    def __init__(self, metric: AbstractMetric,  num_agents=5, width=100, height=100,park_name: str = "greenwich", seed = 42, kind="normal", grass_decay_rate=0.2, grass_growth_probability=0.3, agent_params : dict = None):
         super().__init__(seed=seed)
         self.num_agents = num_agents
+        self.park_name = park_name
         self.grid = OrthogonalMooreGrid((width, height), torus=False, random=self.random)
-        self.environment = TestEnvironment(width, height, "doria_pamphil")
+        self.environment = TestEnvironment(width, height, park_name = self.park_name)
         self.step_count = 0
         self.spawn_cells = None
         self.data_collector = DataCollector(
@@ -37,6 +39,8 @@ class ParkModel(mesa.Model):
         self.targets_vision = PropertyLayer(
             "SUBTARGETS", dimensions=(width, height), default_value=0, dtype=int
         )
+        self.metric = metric
+
 
     def __str__(self):
         return f"Model with params: {self.agent_params} and seed {self._seed}"
@@ -55,7 +59,7 @@ class ParkModel(mesa.Model):
         self.spawn_cells = [
             cell
             for cell in self.grid.all_cells
-            if cell.coordinate in self.environment.entrances
+            if cell.coordinate in entrances.entrances_map[self.park_name]
         ]
         self.spawn_agents(3)
 

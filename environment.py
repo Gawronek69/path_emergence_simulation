@@ -34,7 +34,7 @@ def analyze_window(coords, x, y):
 
 class TestEnvironment(Environment):
 
-    def __init__(self, width, height, park_name):
+    def __init__(self, width, height, park_name: str):
         super().__init__(width, height)
         self.sidewalk_coords = []
         self.sidewalk_layer = None
@@ -46,6 +46,7 @@ class TestEnvironment(Environment):
         self.grass_layer = None
         self.grass_popularity_layer = None
         self.park_name = park_name
+        self.gradient_maps = {}
         self.entrances = eval(f"entrances.{park_name}")
 
     def get_sidewalk_cords(self):
