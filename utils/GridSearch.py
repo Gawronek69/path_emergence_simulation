@@ -6,19 +6,24 @@ import random
 import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
+
+from utils.step_metrics import AbstractMetric, ClosestMetric, AffordanceMetric
 from utils.terrains import Terrain
 
-"""GridSearch like class for generating many simulataions with different params at once
+"""GridSearch like class for generating many simulations with different params at once
 use run_models to run the simulations and plot_heatmaps to create the results"""
 class GridSearch:
 
-    def __init__(self, directory:str = os.getcwd(),seeds: int|list[int] = 42 , samples:int = 5,   n_workers : int = 1, stop_step:int = 100, **kwargs):
+    """ !!! Metric can be "normal" or "affordance" !!! """
+    def __init__(self, directory:str = os.getcwd(), parks: str|list[str] = "doria_pamphil", seeds: int|list[int] = 42 , metric: str | list[str] = "normal" ,samples:int = 5,   n_workers : int = 1, stop_step:int = 100, **kwargs):
         self.directory = directory
         self.seeds = seeds
         self.samples = samples
         self.n_workers = n_workers
         self.stop_step = stop_step
         self.model_params = kwargs
+        self.metric = metric
+        self.parks = parks
         self.params = self.initialize()
         self.models_data = []
 
@@ -39,39 +44,50 @@ class GridSearch:
             else:
                 model_seed = self.seeds
 
-            params.append((agent_params, model_seed))
+            if isinstance(self.metric, list):
+                model_metric = random.choice(self.metric)
+            else:
+                model_metric = self.metric
+
+            if isinstance(self.parks, list):
+                model_park = random.choice(self.parks)
+            else:
+                model_park = self.parks
+
+            params.append((agent_params, model_seed, model_metric, model_park))
 
         return params
 
 
     """plots heatmaps of agents movements from created simulations"""
-    def plot_heatmaps(self) -> None:
+    @staticmethod
+    def _create_heatmaps(directory: str, models_data: list[dict]) -> None:
 
         plot_dirname = "heatmaps"
 
-        self.check_create_dir(plot_dirname)
+        GridSearch.check_create_dir(directory, plot_dirname)
 
 
-        for i, model in enumerate(self.models_data):
+        for index, model in enumerate(models_data):
 
             plt.figure(figsize=(20, 14), dpi=300)
             ax = plt.gca()
-            model_params = model["params"]
+            model_name = model["params"]
 
-            self.get_heatmap(ax, model_idx= i)
+            GridSearch.get_heatmap(ax, model)
 
-            print(f"Saving to {self.directory}/{plot_dirname}/{model_params}{i}.png")
-            plt.title(f"{model_params}")
-            plt.savefig(f"{self.directory}/{plot_dirname}/{model_params}{i}.png")
+            print(f"Saving to {directory}/{plot_dirname}/{model_name}{index}.png")
+            plt.title(f"{model_name}")
+            plt.savefig(f"{directory}/{plot_dirname}/{model_name}{index}.png")
             plt.close()
 
     """function for getting the score of the simulation compared to the real emerged paths"""
-
-    def get_acc(self):
+    @staticmethod
+    def _create_acc(directory: str, models_data: list[dict]):
         plot_dirname = "accuracy"
-        self.check_create_dir(plot_dirname)
+        GridSearch.check_create_dir(directory, plot_dirname)
 
-        for idx, model in enumerate(self.models_data):
+        for idx, model in enumerate(models_data):
             acc = model["accuracy"][0]
             created_paths = model["accuracy"][1]
             original_paths = model["accuracy"][2]
@@ -81,20 +97,22 @@ class GridSearch:
             ax.imshow(np.ma.masked_where(original_paths == 0, original_paths), cmap="Blues", alpha=0.7, vmin=0, vmax=1)
             ax.set_title(f"Accuracy: {acc}")
 
-            save_path = os.path.join(self.directory, plot_dirname, f"{model['params']}{idx}.jpg")
+            save_path = os.path.join(directory, plot_dirname, f"{model['params']}{idx}.jpg")
             plt.savefig(save_path)
             plt.close(f)
 
             print("Accuracy of", model["params"], ":", model["accuracy"][0])
 
     """plots maps states and heatmaps of agents movement together from created simulations"""
-    def plot_map_and_heat(self, agents: bool = True) -> None:
+    @staticmethod
+    def _create_map_and_heat(directory:str,models_data: list[dict], agents: bool = True) -> None:
 
         plot_dirname = "combined"
 
-        self.check_create_dir(plot_dirname)
+        GridSearch.check_create_dir(directory, plot_dirname)
 
-        for index, model in enumerate(self.models_data):
+        for index, model in enumerate(models_data):
+
             model_name = model["params"]
             model_map_data = model["cells"]
 
@@ -106,22 +124,24 @@ class GridSearch:
             ax.set_aspect("equal")
 
 
-            self.get_map_state(ax, model_idx=index, plot_agents=agents, alpha=1)
-            self.get_heatmap(ax, model_idx=index, alpha=0.3)
+            GridSearch.get_map_state(ax, model, plot_agents=agents, alpha=1)
+            GridSearch.get_heatmap(ax, model, alpha=0.3)
 
-            print(f"Saving to {self.directory}/{plot_dirname}/{model_name}{index}.png")
+            print(f"Saving to {directory}/{plot_dirname}/{model_name}{index}.png")
             plt.title(f"{model_name}")
-            plt.savefig(f"{self.directory}/{plot_dirname}/{model_name}{index}.png")
+            plt.savefig(f"{directory}/{plot_dirname}/{model_name}{index}.png")
             plt.close()
 
     """plots maps state from created simulations"""
-    def plot_map_state(self, agents: bool = True) -> None:
+    @staticmethod
+    def _create_map_state(directory:str,models_data: list[dict], agents: bool = True) -> None:
 
         plot_dirname = "maps"
 
-        self.check_create_dir(plot_dirname)
+        GridSearch.check_create_dir(directory, plot_dirname)
 
-        for index, model in enumerate(self.models_data):
+        for index, model in enumerate(models_data):
+
             model_name = model["params"]
             model_map_data = model["cells"]
 
@@ -132,17 +152,52 @@ class GridSearch:
             ax.set_ylim(0, y)
             ax.set_aspect("equal")
 
-            self.get_map_state(ax, model_idx= index, plot_agents=agents, alpha=1)
+            GridSearch.get_map_state(ax, model, plot_agents=agents, alpha=1)
 
-            print(f"Saving to {self.directory}/{plot_dirname}/{model_name}{index}.png")
+            print(f"Saving to {directory}/{plot_dirname}/{model_name}{index}.png")
             plt.title(f"{model_name}")
-            plt.savefig(f"{self.directory}/{plot_dirname}/{model_name}{index}.png")
+            plt.savefig(f"{directory}/{plot_dirname}/{model_name}{index}.png")
             plt.close()
 
-    """creates heatmap plot"""
-    def get_heatmap(self, ax: plt.Axes, model_idx: int,  alpha: float = 1, ) -> None:
+    @staticmethod
+    def _plot_task(function_name:str, models_data: list[dict], directory: str, func_params: dict) -> None:
 
-        heatmap_data = self.models_data[model_idx]["heatmap"]
+        target_func = getattr(GridSearch, function_name)
+
+        target_func(directory, models_data, **func_params)
+
+
+    def _plot_functions(self, function_name:str, **kwargs) -> None:
+
+        chunk_size = (len(self.models_data) + self.n_workers - 1) // self.n_workers
+        processes = []
+
+        for i in range(self.n_workers):
+            start_index: int = i * chunk_size
+            end_index: int = start_index + chunk_size
+            processes.append((function_name, self.models_data[start_index: end_index], self.directory, kwargs))
+
+        with mp.Pool(processes=self.n_workers) as pool:
+            pool.starmap(GridSearch._plot_task, processes)
+
+
+    def plot_heatmaps(self) -> None:
+        self._plot_functions("_create_heatmaps")
+
+    def plot_maps(self, agents: bool = True) -> None:
+        self._plot_functions("_create_map_state", agents=agents)
+
+    def plot_maps_heats(self, agents: bool = True) -> None:
+        self._plot_functions("_create_map_and_heat", agents=agents)
+
+    def get_acc(self) -> None:
+        self._plot_functions("_create_acc")
+
+    """creates heatmap plot"""
+    @staticmethod
+    def get_heatmap(ax: plt.Axes, models_data: dict, alpha: float = 1, ) -> None:
+
+        heatmap_data = models_data["heatmap"]
 
         sns.heatmap(
             data=np.transpose(heatmap_data),
@@ -156,7 +211,8 @@ class GridSearch:
         ax.invert_yaxis()
 
     """creates map state plot"""
-    def get_map_state(self, ax: plt.Axes, model_idx: int, alpha: float = 1, plot_agents: bool = True) -> None:
+    @staticmethod
+    def get_map_state(ax: plt.Axes, models_data: dict, alpha: float = 1, plot_agents: bool = True) -> None:
 
         def get_cell_color(val: int):
             if val >= Terrain.SIDEWALK.value:
@@ -168,8 +224,8 @@ class GridSearch:
                 norm = plt.Normalize(vmin=1, vmax=100)
                 return cmap(norm(val))
 
-        model_map_data = self.models_data[model_idx]["cells"]
-        model_agents_pos = self.models_data[model_idx]["agents"]
+        model_map_data = models_data["cells"]
+        model_agents_pos = models_data["agents"]
 
         y, x = model_map_data.shape
 
@@ -185,7 +241,8 @@ class GridSearch:
 
 
     """task for each process - creates models, runs the simulations and returns the simulation data to the queue"""
-    def _model_task(self, model_params: list[dict], queue: mp.Queue) -> None:
+    @staticmethod
+    def _run_task(model_params: list[dict], queue: mp.Queue, stop_time: int) -> None:
 
         def get_coord_value(i: int, j: int) -> dict:
             grid = model.grid
@@ -200,11 +257,16 @@ class GridSearch:
 
         models_data = []
         for model_item in model_params:
-            model = ParkModel(agent_params=model_item[0], seed=model_item[1])
+            if model_item[2] == "normal":
+                model_metric = ClosestMetric()
+            else:
+                model_metric = AffordanceMetric()
+
+            model = ParkModel(agent_params=model_item[0], seed=model_item[1], metric=model_metric, park_name=model_item[3])
             model.setup()
-            for _ in range(self.stop_step):
+            for _ in range(stop_time):
                 model.step()
-            models_data.append({"params" : model_item, "heatmap": model.heatmap, "cells": get_map_matrix(), "agents": [agent.cell.coordinate for agent in model.agents], "accuracy" : model.calculate_accuracy()})
+            models_data.append({"params" : model_item, "heatmap": model.heatmap, "cells": get_map_matrix(), "agents": [agent.cell.coordinate for agent in model.agents], "accuracy" : model.calculate_accuracy(), "metric" : str(model.metric)})
 
         queue.put(models_data)
 
@@ -222,7 +284,7 @@ class GridSearch:
             start_index: int = i * chunk_size
             end_index: int = start_index + chunk_size
 
-            process = mp.Process(target=self._model_task, args=(self.params[start_index: end_index], results_queue))
+            process = mp.Process(target=GridSearch._run_task, args=(self.params[start_index: end_index], results_queue, self.stop_step))
             processes.append(process)
             process.start()
 
@@ -237,13 +299,14 @@ class GridSearch:
 
         self.models_data = final_models
 
+    def slice_models(self, acc_thresh: float):
+        # acc_thresh max value is 1 - 100% acc
+        self.models_data = [model for model in self.models_data if model['accuracy'][0] >= acc_thresh]
+
 
     """Checks whether exists the directory for plot directories and the plot directories as well"""
-    def check_create_dir(self, plot_dirname: str) -> None:
+    @staticmethod
+    def check_create_dir(directory: str,  plot_dirname: str) -> None:
 
-        if not os.path.isdir(self.directory):
-            os.mkdir(self.directory)
-
-        map_path = os.path.join(self.directory, plot_dirname)
-        if not os.path.exists(map_path):
-            os.mkdir(os.path.join(self.directory, plot_dirname))
+        path = os.path.join(directory, plot_dirname)
+        os.makedirs(path, exist_ok=True)

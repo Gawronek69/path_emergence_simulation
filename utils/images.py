@@ -6,8 +6,7 @@ import cv2
 import numpy as np
 from utils.terrains import Terrain
 
-def get_coordinates(image):
-    images = {"doria_pamphil": "utils/park_imgs/doria_pamphil.png",
+images = {"doria_pamphil": "utils/park_imgs/doria_pamphil.png",
               "doria_pamphil_west": "utils/park_imgs/doria_pamphil_west.png",
               "greenwich": "utils/park_imgs/greenwich.png",
               "blackheath": "utils/park_imgs/blackheath.png",
@@ -16,6 +15,7 @@ def get_coordinates(image):
               "clapham": "utils/park_imgs/clapham.png",
               "hampstead": "utils/park_imgs/hampstead.png"}
 
+def get_coordinates(image):
     try:
         path = images[image]
     except KeyError:

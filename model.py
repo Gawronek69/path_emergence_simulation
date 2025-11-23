@@ -13,11 +13,11 @@ from utils.terrains import Terrain
 from utils.images import binarize_desired_paths
 from utils.data_collecting import gather_steps
 import numpy as np
-from utils.step_metrics import AbstractMetric, ClosestMetric
+from utils.step_metrics import AbstractMetric, ClosestMetric, AffordanceMetric
 
 
 class ParkModel(mesa.Model):
-    def __init__(self, metric: AbstractMetric,  num_agents=5, width=100, height=100,park_name: str = "greenwich", seed = 42, kind="normal", grass_decay_rate=0.2, grass_growth_probability=0.3, agent_params : dict = None, obstacle_margin_percentage=0.5):
+    def __init__(self, metric: AbstractMetric,  num_agents=5, width=100, height=100,park_name: str = "doria_pamphil", seed = 42, kind="normal", grass_decay_rate=0.2, grass_growth_probability=0.3, agent_params : dict = None, obstacle_margin_percentage=0.5):
         super().__init__(seed=seed)
         self.num_agents = num_agents
         self.park_name = park_name
@@ -44,7 +44,7 @@ class ParkModel(mesa.Model):
 
 
     def __str__(self):
-        return f"Model with params: {self.agent_params} and seed {self._seed}"
+        return f"Model with params: {self.agent_params} and seed {self._seed} on map {self.park_name}"
 
     def setup(self):
         terrain, obstacles, obstacles_margin, grass, grass_popularity = self.environment.create()
@@ -72,11 +72,14 @@ class ParkModel(mesa.Model):
         if self.agent_params is None:
             self.agent_params = {}
 
+        starting_points = self.random.sample(self.spawn_cells, k=num_agents)
+        finish_points = [self.random.choice(list(set(self.spawn_cells) - {starting_points[i]})) for i in range(num_agents)]
+
         ParkAgent.create_agents(
             model=self,
             n=num_agents,
-            cell=self.random.sample(self.spawn_cells, k=num_agents),
-            target = self.random.sample(self.spawn_cells, k=num_agents),
+            cell= starting_points,
+            target = finish_points,
             **self.agent_params
         )
 

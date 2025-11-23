@@ -12,6 +12,9 @@ class AbstractMetric(ABC):
     def get_cells_rank(self, agent: ParkAgent) -> list[tuple[Cell, float]]:
         pass
 
+    def __str__(self):
+        return "abstract"
+
 class ClosestMetric(AbstractMetric):
 
     def get_cells_rank(self, agent: ParkAgent) -> list[tuple[Cell, float]]:
@@ -26,6 +29,8 @@ class ClosestMetric(AbstractMetric):
         possible_cells = sorted(possible_cells, key=lambda c: c[1])
         return possible_cells
 
+    def __str__(self):
+        return "normal"
 
 class AffordanceMetric(AbstractMetric):
 
@@ -52,3 +57,6 @@ class AffordanceMetric(AbstractMetric):
             possible_cells = sorted(possible_cells, key=lambda c: c[1])
 
         return possible_cells
+
+    def __str__(self):
+        return "affordance"
