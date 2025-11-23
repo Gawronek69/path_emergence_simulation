@@ -12,8 +12,9 @@ from utils.terrains import Terrain
 use run_models to run the simulations and plot_heatmaps to create the results"""
 class GridSearch:
 
-    def __init__(self, directory:str = os.getcwd(), samples:int = 5,   n_workers : int = 1, stop_step:int = 100, **kwargs):
+    def __init__(self, directory:str = os.getcwd(),seeds: int|list[int] = 42 , samples:int = 5,   n_workers : int = 1, stop_step:int = 100, **kwargs):
         self.directory = directory
+        self.seeds = seeds
         self.samples = samples
         self.n_workers = n_workers
         self.stop_step = stop_step
@@ -22,7 +23,7 @@ class GridSearch:
         self.models_data = []
 
 
-    def initialize(self) -> list[dict]:
+    def initialize(self) -> list[tuple[dict, int]]:
         params = []
         for i in range(self.samples):
             agent_params = dict()
@@ -33,7 +34,12 @@ class GridSearch:
                 else:
                     agent_params[name] = param
 
-            params.append(agent_params)
+            if isinstance(self.seeds, list):
+                model_seed = random.choice(self.seeds)
+            else:
+                model_seed = self.seeds
+
+            params.append((agent_params, model_seed))
 
         return params
 
@@ -194,7 +200,7 @@ class GridSearch:
 
         models_data = []
         for model_item in model_params:
-            model = ParkModel(agent_params=model_item)
+            model = ParkModel(agent_params=model_item[0], seed=model_item[1])
             model.setup()
             for _ in range(self.stop_step):
                 model.step()

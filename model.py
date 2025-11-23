@@ -144,9 +144,9 @@ class ParkModel(mesa.Model):
         for (x, y) in steps:
             self.heatmap[x, y] += 1
 
-    def calculate_accuracy(self, include_dilatation=False):
+    def calculate_accuracy(self, include_dilatation=True):
         terrain_after_simulation = self.grid.GRASS_POPULARITY.data
-        #we hate to determine the threshold
+        #we have to determine the threshold
         created_paths = (terrain_after_simulation > 10).astype(int)
         created_paths = np.rot90(created_paths, k=1)
         if include_dilatation:  created_paths = binary_dilation(created_paths, iterations=1).astype(int)

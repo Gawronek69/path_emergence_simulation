@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import math
 from collections import deque
 from typing import List
@@ -5,9 +7,33 @@ from mesa.discrete_space import CellAgent, Cell
 import numpy as np
 from utils.terrains import Terrain
 
+import functools
+import time
+import logging
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from model import ParkModel
+
+_logger = logging.getLogger("AgentTiming")
+
+
+def log_time(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        start = time.perf_counter()
+        result = func(*args, **kwargs)
+        end = time.perf_counter()
+
+        _logger.info(f"{func.__name__} took {end - start:.6f}s")
+        return result
+
+    return wrapper
+
 class ParkAgent(CellAgent):
 
-    def __init__(self, model, cell:Cell, target: Cell, angle: int = 120, distance: int = 12, tile_weight: float = 3, distance_weight: float = 0.3):
+    def __init__(self, model: ParkModel, cell:Cell, target: Cell, angle: int = 120, distance: int = 12, tile_weight: float = 3, distance_weight: float = 0.3):
         super().__init__(model)
         self.cell = cell
         self.target = target
@@ -24,6 +50,8 @@ class ParkAgent(CellAgent):
         self.steps_count = 0
         self.vision_range = []
         self.obstacle_percentage = 0.2
+
+
 
 
     def action(self):
@@ -73,6 +101,7 @@ class ParkAgent(CellAgent):
         #     self.cell = self.model.random.choice(possible_cells)
 
     """ Function that returns the visible tiles by the agent"""
+    @log_time
     def select_subtarget(self) -> list[tuple[Cell, float]]:
 
         def get_cell_vec(cell1: Cell, cell2: Cell) -> np.array:
@@ -106,9 +135,48 @@ class ParkAgent(CellAgent):
 
         target_vector = get_cell_vec(self.target, self.cell)
         cells = []
+
         visited = set()
         for cell in self.cell.neighborhood:
             rec_find_cells(cell, target_vector)
+
+
+        # grid_w, grid_h = self.model.grid.width, self.model.grid.height
+        # x, y = self.cell.coordinate
+        # x_min, x_max = max(0, x - self.distance), min(grid_w, x + self.distance + 1)
+        # y_min, y_max = max(0, y - self.distance), min(grid_h, y + self.distance + 1)
+        #
+        # x_grid, y_grid = np.meshgrid(np.arange(x_min, x_max), np.arange(y_min, y_max), indexing='ij')
+        # vec_x = x_grid - x
+        # vec_y = y_grid - y
+        # norms = np.sqrt(vec_x ** 2 + vec_y ** 2)
+        # target_norm = np.linalg.norm(target_vector)
+        #
+        # with np.errstate(divide='ignore', invalid='ignore'):
+        #     dot_products = (vec_x * target_vector[0]) + (vec_y * target_vector[1])
+        #     cosines = dot_products / (norms * target_norm)
+        #
+        # min_cos = np.cos(np.deg2rad(self.angle / 2))
+        # angle_mask = cosines >= min_cos
+        #
+        # dist_mask = (norms <= self.distance) & (norms > 0)
+        #
+        # combined_masks = angle_mask & dist_mask
+        #
+        # valid_cells_coords = np.argwhere(combined_masks)
+        #
+        # for local_x, local_y in valid_cells_coords:
+        #     gx = x_min + local_x
+        #     gy = y_min + local_y
+        #
+        #     grid_cells = self.model.grid.all_cells.cells
+        #
+        #     if (gx, gy) in grid_cells:
+        #         cell_candidate = grid_cells[(gx, gy)]
+        #
+        #         if cell_candidate.OBSTACLE == 0:
+        #             affordance = self.return_cell_affordance(cell_candidate)
+        #             cells.append((cell_candidate, affordance))
 
         return cells
 
