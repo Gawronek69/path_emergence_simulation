@@ -4,12 +4,12 @@ import mesa
 from mesa import DataCollector
 from mesa.discrete_space import OrthogonalMooreGrid, CellAgent
 from mesa.experimental.cell_space import PropertyLayer
-
+from scipy.ndimage import binary_dilation
 
 from environment import TestEnvironment
 from agent import ParkAgent
 from utils.terrains import Terrain
-from utils import entrances, data_collecting
+from utils.images import binarize_desired_paths
 from utils.data_collecting import gather_steps
 import numpy as np
 from utils.step_metrics import AbstractMetric, ClosestMetric
@@ -31,6 +31,7 @@ class ParkModel(mesa.Model):
         self.agent_params = agent_params
         self.kind = kind
         self.grass_decay_rate = grass_decay_rate
+        self.obstacle_margin_percentage = obstacle_margin_percentage
         self.grass_growth_probability = grass_growth_probability
         self.agents_vision = PropertyLayer(
             "VISION", dimensions=(width, height), default_value=0, dtype=int
@@ -45,10 +46,11 @@ class ParkModel(mesa.Model):
         return f"Model with params: {self.agent_params} and seed {self._seed}"
 
     def setup(self):
-        terrain, obstacles, grass, grass_popularity = self.environment.create()
+        terrain, obstacles, obstacles_margin, grass, grass_popularity = self.environment.create()
         self.grid.add_property_layer(terrain)
         self.grid.add_property_layer(grass)
         self.grid.add_property_layer(obstacles)
+        self.grid.add_property_layer(obstacles_margin)
         self.grid.add_property_layer(grass_popularity)
         self.grid.add_property_layer(self.agents_vision)
         self.grid.add_property_layer(self.targets_vision)
@@ -86,12 +88,17 @@ class ParkModel(mesa.Model):
         if self.step_count % 10 == 0 and len(self.agents) <= 15:
             self.spawn_agents(3)
 
-
+        stuck_agents = [agent for agent in self.agents if len(set(agent.last_10_cells)) == 2 and agent.steps_count > 10]
+        self.remove_agents(stuck_agents)
         del_agents= [agent for agent in self.agents if agent.target == agent.cell]
         self.remove_agents(del_agents)
+
         self.agents.shuffle_do("step")
         agent_cells = self._handle_grass_decay()
-        self._handle_grass_growth(agent_cells)
+        #self._handle_grass_growth(agent_cells)
+
+        if self.step_count%100 == 0:
+            print("Step: ", self.step_count, ",accuracy: ", self.calculate_accuracy()[0])
 
     """Function that simulates grass decay"""
     def _handle_grass_decay(self):
@@ -105,6 +112,13 @@ class ParkModel(mesa.Model):
                     self.grid.GRASS_POPULARITY.data[agent.cell.coordinate] = 100
                 else:
                     self.grid.GRASS_POPULARITY.data[agent.cell.coordinate] += math.ceil(increment)
+            if agent.cell.OBSTACLE_MARGIN == Terrain.OBSTACLE_MARGIN.value:
+                value = self.obstacle_margin_percentage * self.grid.GRASS_POPULARITY.data[agent.cell.coordinate]
+                increment = max(1, math.ceil(self.grass_decay_rate * value * self.obstacle_margin_percentage))
+                if value + increment > 40:
+                    self.grid.GRASS_POPULARITY.data[agent.cell.coordinate] = 40
+                else:
+                    self.grid.GRASS_POPULARITY.data[agent.cell.coordinate] += math.ceil(increment)
         return agent_cells
 
     """Function that simulates grass regrowth"""
@@ -116,8 +130,8 @@ class ParkModel(mesa.Model):
                 """Reducing only the medium paths"""
                 if 40 < value < 80 and self.random.random() < self.grass_growth_probability:
                     self.grid.GRASS_POPULARITY.data[cell.coordinate] -= 1
-
-
+            if cell.OBSTACLE_MARGIN == Terrain.OBSTACLE_MARGIN.value and cell not in agent_cells:
+                self.grid.GRASS_POPULARITY.data[cell.coordinate] *= self.obstacle_margin_percentage
 
     def remove_agents(self, agents: list[ParkAgent]) -> None:
         for agent in agents:
@@ -133,4 +147,16 @@ class ParkModel(mesa.Model):
 
         for (x, y) in steps:
             self.heatmap[x, y] += 1
+
+    def calculate_accuracy(self, include_dilatation=True):
+        terrain_after_simulation = self.grid.GRASS_POPULARITY.data
+        #we have to determine the threshold
+        created_paths = (terrain_after_simulation > 10).astype(int)
+        created_paths = np.rot90(created_paths, k=1)
+        if include_dilatation:  created_paths = binary_dilation(created_paths, iterations=1).astype(int)
+        reference_paths = np.load(f"utils/desired_paths_matrixes/" + self.environment.park_name + ".npy")
+        mask = reference_paths==1
+        accuracy = np.sum(created_paths[mask] == 1) / np.sum(mask)
+        return accuracy, created_paths, reference_paths
+
 

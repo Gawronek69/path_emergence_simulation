@@ -1,7 +1,6 @@
 import os
 import multiprocessing as mp
 
-from main import model
 from model import ParkModel
 import random
 import seaborn as sns
@@ -13,8 +12,9 @@ from utils.terrains import Terrain
 use run_models to run the simulations and plot_heatmaps to create the results"""
 class GridSearch:
 
-    def __init__(self, directory:str = os.getcwd(), samples:int = 5,   n_workers : int = 1, stop_step:int = 100, **kwargs):
+    def __init__(self, directory:str = os.getcwd(),seeds: int|list[int] = 42 , samples:int = 5,   n_workers : int = 1, stop_step:int = 100, **kwargs):
         self.directory = directory
+        self.seeds = seeds
         self.samples = samples
         self.n_workers = n_workers
         self.stop_step = stop_step
@@ -23,7 +23,7 @@ class GridSearch:
         self.models_data = []
 
 
-    def initialize(self) -> list[dict]:
+    def initialize(self) -> list[tuple[dict, int]]:
         params = []
         for i in range(self.samples):
             agent_params = dict()
@@ -34,7 +34,12 @@ class GridSearch:
                 else:
                     agent_params[name] = param
 
-            params.append(agent_params)
+            if isinstance(self.seeds, list):
+                model_seed = random.choice(self.seeds)
+            else:
+                model_seed = self.seeds
+
+            params.append((agent_params, model_seed))
 
         return params
 
@@ -61,8 +66,26 @@ class GridSearch:
             plt.close()
 
     """function for getting the score of the simulation compared to the real emerged paths"""
-    def get_acc(self) -> float:
-        pass
+
+    def get_acc(self):
+        plot_dirname = "accuracy"
+        self.check_create_dir(plot_dirname)
+
+        for idx, model in enumerate(self.models_data):
+            acc = model["accuracy"][0]
+            created_paths = model["accuracy"][1]
+            original_paths = model["accuracy"][2]
+
+            f, ax = plt.subplots()
+            ax.imshow(np.ma.masked_where(created_paths == 0, created_paths),cmap="Reds", alpha=0.7, vmin=0, vmax=1)
+            ax.imshow(np.ma.masked_where(original_paths == 0, original_paths), cmap="Blues", alpha=0.7, vmin=0, vmax=1)
+            ax.set_title(f"Accuracy: {acc}")
+
+            save_path = os.path.join(self.directory, plot_dirname, f"{model['params']}{idx}.jpg")
+            plt.savefig(save_path)
+            plt.close(f)
+
+            print("Accuracy of", model["params"], ":", model["accuracy"][0])
 
     """plots maps states and heatmaps of agents movement together from created simulations"""
     def plot_map_and_heat(self, agents: bool = True) -> None:
@@ -177,11 +200,11 @@ class GridSearch:
 
         models_data = []
         for model_item in model_params:
-            model = ParkModel(agent_params=model_item)
+            model = ParkModel(agent_params=model_item[0], seed=model_item[1])
             model.setup()
             for _ in range(self.stop_step):
                 model.step()
-            models_data.append({"params" : model_item, "heatmap": model.heatmap, "cells": get_map_matrix(), "agents": [agent.cell.coordinate for agent in model.agents]})
+            models_data.append({"params" : model_item, "heatmap": model.heatmap, "cells": get_map_matrix(), "agents": [agent.cell.coordinate for agent in model.agents], "accuracy" : model.calculate_accuracy()})
 
         queue.put(models_data)
 

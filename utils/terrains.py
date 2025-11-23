@@ -6,6 +6,7 @@ Class used to indicate the type of the terrain - OBSTACLE has to be 0 so it will
 
 class Terrain(Enum):
     OBSTACLE = 1
+    OBSTACLE_MARGIN = 1
     GRASS = 3
     SIDEWALK = 100
 

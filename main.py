@@ -9,6 +9,17 @@ import seaborn as sns
 from model import ParkModel
 from visualisation import *
 
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler("simulation_performance.log"),
+        logging.StreamHandler()
+    ]
+)
+
 
 model_params = {
     "seed": {
