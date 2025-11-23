@@ -8,6 +8,7 @@ from scipy.ndimage import binary_dilation
 
 from environment import TestEnvironment
 from agent import ParkAgent
+from utils import entrances
 from utils.terrains import Terrain
 from utils.images import binarize_desired_paths
 from utils.data_collecting import gather_steps
@@ -16,7 +17,7 @@ from utils.step_metrics import AbstractMetric, ClosestMetric
 
 
 class ParkModel(mesa.Model):
-    def __init__(self, metric: AbstractMetric,  num_agents=5, width=100, height=100,park_name: str = "greenwich", seed = 42, kind="normal", grass_decay_rate=0.2, grass_growth_probability=0.3, agent_params : dict = None):
+    def __init__(self, metric: AbstractMetric,  num_agents=5, width=100, height=100,park_name: str = "greenwich", seed = 42, kind="normal", grass_decay_rate=0.2, grass_growth_probability=0.3, agent_params : dict = None, obstacle_margin_percentage=0.5):
         super().__init__(seed=seed)
         self.num_agents = num_agents
         self.park_name = park_name

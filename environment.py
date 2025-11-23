@@ -47,7 +47,7 @@ class TestEnvironment(Environment):
         self.grass_popularity_layer = None
         self.park_name = park_name
         self.gradient_maps = {}
-        self.entrances = eval(f"entrances.{park_name}")
+        #self.entrances = eval(f"entrances.{park_name}")
 
     def get_sidewalk_cords(self):
         coords = images.get_coordinates(self.park_name)
