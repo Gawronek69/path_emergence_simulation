@@ -10,11 +10,42 @@ import numpy as np
 from utils.step_metrics import AbstractMetric, ClosestMetric, AffordanceMetric
 from utils.terrains import Terrain
 
-"""GridSearch like class for generating many simulations with different params at once
-use run_models to run the simulations and plot_heatmaps to create the results"""
 class GridSearch:
+    """
+        GridSearch like class for generating many simulations with different params at once
+        use run_models to run the simulations, use plot_heatmaps, plot_maps, plot_maps_heats and get_acc to create plots
+        and slice_models to remove models with acc less than provided threshold
 
-    """ !!! Metric can be "normal" or "affordance" !!! """
+
+        :param directory: The base directory where simulation artifacts (logs, plots, data)
+                          will be saved. Defaults to `os.getcwd()`.
+        :type directory: str
+
+        :param parks: The identifier(s) for the simulation environments/maps.
+                      Can be a single map name or a list of them. Defaults to "doria_pamphil".
+        :type parks: str | list[str]
+
+        :param seeds: Random seed(s) for reproducibility.
+                      If a list is provided, simulations will pick random seed. Defaults to 42.
+        :type seeds: int | list[int]
+
+        :param metric: The logic used for agent pathfinding/interaction (the part of coming to the subtarget).
+                       **Must be either "normal" or "affordance".** Defaults to "normal".
+        :type metric: str | list[str]
+
+        :param samples: The number of models with random params created. Defaults to 5.
+        :type samples: int
+
+        :param n_workers: The number of parallel processes/cores to use for
+                          running simulations and generating plots. Defaults to 1.
+        :type n_workers: int
+
+        :param stop_step: The maximum number of simulation steps allowed before
+                          a run is forcibly terminated. Defaults to 100.
+        :type stop_step: int
+
+        :param kwargs: additional arguments for agents see ParkAgent class for possible args.
+    """
     def __init__(self, directory:str = os.getcwd(), parks: str|list[str] = "doria_pamphil", seeds: int|list[int] = 42 , metric: str | list[str] = "normal" ,samples:int = 5,   n_workers : int = 1, stop_step:int = 100, **kwargs):
         self.directory = directory
         self.seeds = seeds
@@ -159,6 +190,7 @@ class GridSearch:
             plt.savefig(f"{directory}/{plot_dirname}/{model_name}{index}.png")
             plt.close()
 
+    """Task function for running a plot function"""
     @staticmethod
     def _plot_task(function_name:str, models_data: list[dict], directory: str, func_params: dict) -> None:
 
@@ -166,7 +198,8 @@ class GridSearch:
 
         target_func(directory, models_data, **func_params)
 
-
+    """Function that takes the function name and its args in kwargs to run the plots in multiple processes
+    Required params are: directory name, data of the models and function name - func_params are kwargs for the function arguments"""
     def _plot_functions(self, function_name:str, **kwargs) -> None:
 
         chunk_size = (len(self.models_data) + self.n_workers - 1) // self.n_workers
@@ -309,4 +342,4 @@ class GridSearch:
     def check_create_dir(directory: str,  plot_dirname: str) -> None:
 
         path = os.path.join(directory, plot_dirname)
-        os.makedirs(path, exist_ok=True)
+        os.makedirs(path, exist_ok=True) # This function is safe for asynchronous tasks (cuz plot functions on two different processes might try to create the dir at the same time)
