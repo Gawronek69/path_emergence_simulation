@@ -7,7 +7,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
 
-from utils.step_metrics import AbstractMetric, ClosestMetric, AffordanceMetric
+from utils.step_metrics import AbstractMetric, ClosestMetric, AffordanceMetric, MixedMetric
 from utils.terrains import Terrain
 
 class GridSearch:
@@ -292,6 +292,8 @@ class GridSearch:
         for model_item in model_params:
             if model_item[2] == "normal":
                 model_metric = ClosestMetric()
+            elif model_item[2] == "mixed":
+                model_metric = MixedMetric()
             else:
                 model_metric = AffordanceMetric()
 
