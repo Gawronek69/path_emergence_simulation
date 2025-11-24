@@ -60,3 +60,44 @@ class AffordanceMetric(AbstractMetric):
 
     def __str__(self):
         return "affordance"
+
+class MixedMetric(AbstractMetric):
+    def get_cells_rank(self, agent: ParkAgent) -> list[tuple[Cell, float]]:
+        cell_dist = agent.target
+
+        if agent.subtarget:
+            cell_dist = agent.subtarget
+
+        possible_cells= [(c, agent.calc_dest_dist(cell_dist, c), agent.get_tile_value(c)) for c in agent.cell.neighborhood if
+                          (c.SIDEWALK == Terrain.SIDEWALK.value or c.GRASS == Terrain.GRASS.value) and
+                         c.OBSTACLE_MARGIN != Terrain.OBSTACLE_MARGIN.value and c not in agent.previous_cells]
+
+        #if there is no possible steps for our agent - send him to the target and forget about him
+        if len(possible_cells) == 0:
+            return [(cell_dist, -1)]
+
+        #for scaling values to the range 0-1
+        min_dist = min(possible_cells, key=lambda x: x[1])
+        max_dist = max(possible_cells, key=lambda x: x[1])
+        min_aff = min(possible_cells, key=lambda x: x[2])
+        max_aff = max(possible_cells, key=lambda x: x[2])
+        d_dist = max_dist[1] - min_dist[1]
+        d_aff = max_aff[2] - min_aff[2]
+
+        def calculate_combination(c : tuple[Cell, float, float]) -> float:
+            if d_aff == 0:
+                return (c[1] - min_dist[1]) / d_dist #all have the same affordance
+            else:
+                dist_scaled = (c[1] - min_dist[1]) / d_dist
+                aff_scaled = (c[2] - min_aff[2]) / d_aff
+                return dist_scaled/aff_scaled
+
+        candidates = [(c[0], calculate_combination(c)) for c in possible_cells]
+        candidates = sorted(candidates, key=lambda c: c[1])
+        return candidates
+
+    def __str__(self):
+        return "mixed"
+
+
+

@@ -79,6 +79,7 @@ class ParkAgent(CellAgent):
             self.model.grid.SUBTARGETS.data[self.subtarget.coordinate] += 1
 
         self.cell = self.model.metric.get_cells_rank(self)[0][0]
+        self.previous_cells.append(self.cell)
 
     """ Function that returns the visible tiles by the agent"""
     @log_time
@@ -188,8 +189,6 @@ class ParkAgent(CellAgent):
         return ParkAgent.calc_dest_dist(self.target, self.cell)
 
 
-    """Each cell has only one type - other types values are equal to 0 - so adding 
-    everything up we get the cell value, without checking the type"""
     @staticmethod
     def get_tile_value(cell: Cell) -> float:
         if cell.SIDEWALK == Terrain.SIDEWALK.value:
