@@ -28,7 +28,7 @@ class ParkModel(mesa.Model):
         self.data_collector = DataCollector(
             model_reporters={"Steps": gather_steps}
         )
-        self.heatmap = np.zeros((width, height))
+        self.heatmap = np.zeros((width, height), dtype=np.uint32)
         self.agent_params = agent_params
         self.kind = kind
         self.grass_decay_rate = grass_decay_rate

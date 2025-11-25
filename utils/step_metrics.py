@@ -27,6 +27,10 @@ class ClosestMetric(AbstractMetric):
                           (c.SIDEWALK == Terrain.SIDEWALK.value or c.GRASS == Terrain.GRASS.value)]
 
         possible_cells = sorted(possible_cells, key=lambda c: c[1])
+
+        if len(possible_cells) == 0:
+            return [(cell_dist, -1)]
+
         return possible_cells
 
     def __str__(self):
@@ -55,6 +59,9 @@ class AffordanceMetric(AbstractMetric):
             possible_cells = [(c, agent.calc_dest_dist(cell_dist, c)) for c in agent.cell.neighborhood if
                           (c.SIDEWALK == Terrain.SIDEWALK.value or c.GRASS == Terrain.GRASS.value)]
             possible_cells = sorted(possible_cells, key=lambda c: c[1])
+
+        if len(possible_cells) == 0:
+            return [(cell_dist, -1)]
 
         return possible_cells
 

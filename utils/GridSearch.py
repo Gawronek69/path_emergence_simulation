@@ -275,14 +275,14 @@ class GridSearch:
 
     """task for each process - creates models, runs the simulations and returns the simulation data to the queue"""
     @staticmethod
-    def _run_task(model_params: list[dict], queue: mp.Queue, stop_time: int) -> None:
+    def _run_task(model_params: list[dict], queue: mp.Queue, stop_time: int, models_num: int, counter: mp.Value, lock: mp.Lock) -> None:
 
         def get_coord_value(i: int, j: int) -> dict:
             grid = model.grid
             return grid.GRASS_POPULARITY.data[i,j] + grid.SIDEWALK.data[i,j]
 
         def get_map_matrix() -> np.array:
-            map_data = np.zeros((model.grid.height, model.grid.width))
+            map_data = np.zeros((model.grid.height, model.grid.width), dtype=np.uint8)
             for j in range(model.grid.height):
                 for i in range(model.grid.width):
                     map_data[j, i] = get_coord_value(j,i)
@@ -309,6 +309,25 @@ class GridSearch:
             except Exception as e:
                 print(f"!!! CRASH processing model {model_item}: {e}")
 
+            finally:
+                with counter.get_lock():
+                    counter.value += 1
+                    curr_count = counter.value
+                progress = curr_count / models_num * 100
+
+                curr_pct = int((curr_count / models_num) * 100)
+
+                prev_pct = int(((curr_count - 1) / models_num) * 100)
+
+                """The percentages might not show for samples less than 1000"""
+
+                if curr_pct % 10 == 0 and curr_pct != prev_pct:
+                    with lock:
+                        print(f"""
+                              \033[92m Current progress: {progress:.0f}% ({curr_count}/{models_num})  \033[0m
+                              """)
+
+
         queue.put(models_data)
 
     """creates processes for running simulations and runs the tasks there"""
@@ -320,12 +339,15 @@ class GridSearch:
         chunk_size = (self.samples + self.n_workers - 1) // self.n_workers
         processes = []
 
+        shared_counter = mp.Value('i', 0)
+        print_lock = mp.Lock()
+
         for i in range(self.n_workers):
 
             start_index: int = i * chunk_size
             end_index: int = start_index + chunk_size
 
-            process = mp.Process(target=GridSearch._run_task, args=(self.params[start_index: end_index], results_queue, self.stop_step))
+            process = mp.Process(target=GridSearch._run_task, args=(self.params[start_index: end_index], results_queue, self.stop_step, self.samples, shared_counter, print_lock))
             processes.append(process)
             process.start()
 
