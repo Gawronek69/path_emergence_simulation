@@ -61,6 +61,46 @@ class AffordanceMetric(AbstractMetric):
     def __str__(self):
         return "affordance"
 
+class RandomBalancedMetric(AbstractMetric):
+    def get_cells_rank(self, agent: ParkAgent) -> list[tuple[Cell, float]]:
+        cell_dist = agent.target
+        if agent.subtarget:
+            cell_dist = agent.subtarget
+
+        min_dist = ParkAgent.calc_dest_dist(cell_dist, agent.cell)
+
+        possible_cells_dist = [(c, agent.calc_dest_dist(cell_dist, c)) for c in agent.cell.neighborhood if
+                          (c.SIDEWALK == Terrain.SIDEWALK.value or c.GRASS == Terrain.GRASS.value)
+                               and min_dist >= ParkAgent.calc_dest_dist(cell_dist, c)]
+
+
+        possible_cells_aff = [(c, agent.return_cell_affordance(c)) for c in agent.cell.neighborhood if
+                          (c.SIDEWALK == Terrain.SIDEWALK.value or c.GRASS == Terrain.GRASS.value)
+                               and min_dist >= ParkAgent.calc_dest_dist(cell_dist, c)]
+
+        possible_cells_dist = sorted(possible_cells_dist, key=lambda c: c[1])
+        possible_cells_aff = sorted(possible_cells_aff, key=lambda c: c[1], reverse=True)
+
+        ranks = {}
+
+        for rank, (cell, value) in enumerate(possible_cells_dist):
+            ranks[cell] = rank
+
+        for rank, (cell, value) in enumerate(possible_cells_aff):
+            ranks[cell] += rank
+
+        ranks = [(cell, rank) for cell, rank in ranks.items()]
+        ranks = sorted(ranks, key=lambda c: c[1])
+
+        if len(ranks) == 0:
+            return [(cell_dist, -1)]
+
+        return ranks
+
+    def __str__(self):
+        return "balanced_random"
+
+
 class MixedMetric(AbstractMetric):
     def get_cells_rank(self, agent: ParkAgent) -> list[tuple[Cell, float]]:
         cell_dist = agent.target

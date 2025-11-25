@@ -82,7 +82,6 @@ class ParkAgent(CellAgent):
         self.previous_cells.append(self.cell)
 
     """ Function that returns the visible tiles by the agent"""
-    @log_time
     def select_subtarget(self) -> list[tuple[Cell, float]]:
 
         def get_cell_vec(cell1: Cell, cell2: Cell) -> np.array:

@@ -7,7 +7,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
 
-from utils.step_metrics import AbstractMetric, ClosestMetric, AffordanceMetric, MixedMetric
+from utils.step_metrics import *
 from utils.terrains import Terrain
 
 class GridSearch:
@@ -290,18 +290,24 @@ class GridSearch:
 
         models_data = []
         for model_item in model_params:
-            if model_item[2] == "normal":
-                model_metric = ClosestMetric()
-            elif model_item[2] == "mixed":
-                model_metric = MixedMetric()
-            else:
-                model_metric = AffordanceMetric()
+            try:
+                if model_item[2] == "normal":
+                    model_metric = ClosestMetric()
+                elif model_item[2] == "mixed":
+                    model_metric = MixedMetric()
+                elif model_item[2] == "balanced":
+                    model_metric = RandomBalancedMetric()
+                else:
+                    model_metric = AffordanceMetric()
 
-            model = ParkModel(agent_params=model_item[0], seed=model_item[1], metric=model_metric, park_name=model_item[3])
-            model.setup()
-            for _ in range(stop_time):
-                model.step()
-            models_data.append({"params" : model_item, "heatmap": model.heatmap, "cells": get_map_matrix(), "agents": [agent.cell.coordinate for agent in model.agents], "accuracy" : model.calculate_accuracy(), "metric" : str(model.metric)})
+                model = ParkModel(agent_params=model_item[0], seed=model_item[1], metric=model_metric, park_name=model_item[3])
+                model.setup()
+                for _ in range(stop_time):
+                    model.step()
+                models_data.append({"params" : model_item, "heatmap": model.heatmap, "cells": get_map_matrix(), "agents": [agent.cell.coordinate for agent in model.agents], "accuracy" : model.calculate_accuracy(), "metric" : str(model.metric)})
+
+            except Exception as e:
+                print(f"!!! CRASH processing model {model_item}: {e}")
 
         queue.put(models_data)
 
