@@ -132,8 +132,8 @@ class ParkModel(mesa.Model):
                 value = self.grid.GRASS_POPULARITY.data[cell.coordinate]
 
                 """Reducing only the medium paths"""
-                if 40 < value < 80 and self.random.random() < self.grass_growth_probability:
-                    self.grid.GRASS_POPULARITY.data[cell.coordinate] -= 1
+                if 40 < value < 60 and self.random.random() < self.grass_growth_probability:
+                    self.grid.GRASS_POPULARITY.data[cell.coordinate] -= 5
             if cell.OBSTACLE_MARGIN == Terrain.OBSTACLE_MARGIN.value and cell not in agent_cells:
                 self.grid.GRASS_POPULARITY.data[cell.coordinate] *= self.obstacle_margin_percentage
 
@@ -152,7 +152,7 @@ class ParkModel(mesa.Model):
         for (x, y) in steps:
             self.heatmap[x, y] += 1
 
-    def calculate_accuracy(self, include_dilatation=True):
+    def calculate_accuracy(self, include_dilatation=False):
         terrain_after_simulation = self.grid.GRASS_POPULARITY.data
         #we have to determine the threshold
         created_paths = (terrain_after_simulation > 10).astype(int)
