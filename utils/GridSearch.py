@@ -128,7 +128,9 @@ class GridSearch:
             ax.imshow(np.ma.masked_where(original_paths == 0, original_paths), cmap="Blues", alpha=0.7, vmin=0, vmax=1)
             ax.set_title(f"Accuracy: {acc}")
 
-            save_path = os.path.join(directory, plot_dirname, f"{model['params']}{idx}.jpg")
+            p = model['params']
+            safe_name = f"dist{p[0]['distance']}_ang{p[0]['angle']}_tile{p[0]['tile_weight']}_dw{p[0]['distance_weight']}_{p[1]}_{p[2]}_{p[3]}"
+            save_path = os.path.join(directory, plot_dirname, f"{safe_name}_{idx}.jpg")
             plt.savefig(save_path)
             plt.close(f)
 
@@ -143,8 +145,7 @@ class GridSearch:
         GridSearch.check_create_dir(directory, plot_dirname)
 
         for index, model in enumerate(models_data):
-
-            model_name = model["params"]
+            acc = model["accuracy"][0]
             model_map_data = model["cells"]
 
             plt.figure(figsize=(20, 14), dpi=300)
@@ -153,14 +154,17 @@ class GridSearch:
             ax.set_xlim(0, x)
             ax.set_ylim(0, y)
             ax.set_aspect("equal")
+            ax.set_title(f"Accuracy: {acc}")
 
+            p = model['params']
+            model_name = f"dist{p[0]['distance']}_ang{p[0]['angle']}_tile{p[0]['tile_weight']}_dw{p[0]['distance_weight']}_{p[1]}_{p[2]}_{p[3]}"
 
             GridSearch.get_map_state(ax, model, plot_agents=agents, alpha=1)
             GridSearch.get_heatmap(ax, model, alpha=0.3)
 
-            print(f"Saving to {directory}/{plot_dirname}/{model_name}{index}.png")
+            print(f"Saving to {directory}/{plot_dirname}/{model_name}_{index}.png")
             plt.title(f"{model_name}")
-            plt.savefig(f"{directory}/{plot_dirname}/{model_name}{index}.png")
+            plt.savefig(f"{directory}/{plot_dirname}/{model_name}_{index}.png")
             plt.close()
 
     """plots maps state from created simulations"""
