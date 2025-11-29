@@ -99,7 +99,7 @@ class ParkModel(mesa.Model):
 
         self.agents.shuffle_do("step")
         agent_cells = self._handle_grass_decay()
-        #self._handle_grass_growth(agent_cells)
+        self._handle_grass_growth(agent_cells)
 
         if self.step_count%100 == 0:
             print("Step: ", self.step_count, ",accuracy: ", self.calculate_accuracy()[0])
@@ -152,7 +152,7 @@ class ParkModel(mesa.Model):
         for (x, y) in steps:
             self.heatmap[x, y] += 1
 
-    def calculate_accuracy(self, include_dilatation=False):
+    def calculate_accuracy(self, include_dilatation=True):
         terrain_after_simulation = self.grid.GRASS_POPULARITY.data
         #we have to determine the threshold
         created_paths = (terrain_after_simulation > 10).astype(int)
