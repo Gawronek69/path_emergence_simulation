@@ -5,7 +5,7 @@ if __name__ == "__main__":
         samples = 100,
         n_workers = 6,
         stop_step = 1000,
-        metric = ["normal", "affordance", "balanced_random", "mixed"],
+        metric = ["normal", "affordance", "balanced", "mixed"],
         parks = ["blackheath"],
         seeds = [1, 10, 18, 32, 42, 69, 23, 33, 45, 54, 3],
         distance = [7, 8, 9, 10, 11, 12, 13, 14, 15],
